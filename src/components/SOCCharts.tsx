@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { DraggableWidget } from "./DraggableWidget";
+import { HeatmapChart, HeatmapDataPoint } from "./HeatmapChart";
 import {
   Shield,
   AlertTriangle,
@@ -9,6 +10,7 @@ import {
   Users,
   Activity,
   Target,
+  Flame,
 } from "lucide-react";
 import {
   BarChart,
@@ -38,6 +40,7 @@ interface SOCChartsProps {
   eventCorrelation: any[];
   analystWorkload: any[];
   filteredIncidents: any[];
+  securityEventHeatmap: HeatmapDataPoint[];
   getSeverityColor: (severity: string) => string;
   getSeverityBadgeVariant: (severity: string) => any;
   getStatusBadgeVariant: (status: string) => any;
@@ -53,11 +56,24 @@ export const SOCCharts = ({
   eventCorrelation,
   analystWorkload,
   filteredIncidents,
+  securityEventHeatmap,
   getSeverityColor,
   getSeverityBadgeVariant,
   getStatusBadgeVariant,
 }: SOCChartsProps) => {
   switch (widget.id) {
+    case "heatmap":
+      return (
+        <DraggableWidget key="heatmap" id="heatmap" isDragEnabled={isDragEnabled}>
+          <HeatmapChart
+            data={securityEventHeatmap}
+            title="Security Event Heatmap"
+            description="Attack patterns and peak incident times by day and hour"
+            onCellClick={(data) => handleChartClick(data, "Security Event Pattern")}
+          />
+        </DraggableWidget>
+      );
+
     case "alert-chart":
       return (
         <DraggableWidget key="alert-chart" id="alert-chart" isDragEnabled={isDragEnabled}>

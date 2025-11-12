@@ -87,6 +87,44 @@ const eventCorrelation = [
   { time: "16:28", events: 41, correlated: 10, severity: 58, impact: 45 },
 ];
 
+// Security event heatmap data - events by day and hour
+const generateHeatmapData = () => {
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const data = [];
+  
+  for (const day of days) {
+    for (let hour = 0; hour < 24; hour++) {
+      // Simulate realistic attack patterns
+      let baseValue = Math.floor(Math.random() * 30) + 10;
+      
+      // Higher activity during business hours on weekdays
+      if (!["Sat", "Sun"].includes(day) && hour >= 9 && hour <= 17) {
+        baseValue += Math.floor(Math.random() * 40) + 20;
+      }
+      
+      // Spike in attacks during early morning (automated attacks)
+      if (hour >= 2 && hour <= 5) {
+        baseValue += Math.floor(Math.random() * 50) + 30;
+      }
+      
+      // Weekend patterns (lower but consistent)
+      if (["Sat", "Sun"].includes(day)) {
+        baseValue = Math.floor(baseValue * 0.6);
+      }
+      
+      data.push({
+        day,
+        hour,
+        value: baseValue,
+      });
+    }
+  }
+  
+  return data;
+};
+
+const securityEventHeatmap = generateHeatmapData();
+
 const activeIncidents = [
   {
     id: "INC-2024-001",
@@ -164,12 +202,13 @@ const DEFAULT_SOC_WIDGETS: Widget[] = [
   { id: "incidents", label: "Open Incidents", visible: true, size: "medium", order: 1 },
   { id: "mttr", label: "Avg MTTR", visible: true, size: "medium", order: 2 },
   { id: "efficiency", label: "Analyst Efficiency", visible: true, size: "medium", order: 3 },
-  { id: "alert-chart", label: "Alert Distribution", visible: true, size: "large", order: 4 },
-  { id: "incident-chart", label: "Incident Queue", visible: true, size: "large", order: 5 },
-  { id: "mttr-chart", label: "MTTR Trends", visible: true, size: "large", order: 6 },
-  { id: "correlation-chart", label: "Event Correlation", visible: true, size: "large", order: 7 },
-  { id: "analysts", label: "Analyst Workload", visible: true, size: "large", order: 8 },
-  { id: "queue", label: "Active Incident Queue", visible: true, size: "large", order: 9 },
+  { id: "heatmap", label: "Attack Pattern Heatmap", visible: true, size: "large", order: 4 },
+  { id: "alert-chart", label: "Alert Distribution", visible: true, size: "large", order: 5 },
+  { id: "incident-chart", label: "Incident Queue", visible: true, size: "large", order: 6 },
+  { id: "mttr-chart", label: "MTTR Trends", visible: true, size: "large", order: 7 },
+  { id: "correlation-chart", label: "Event Correlation", visible: true, size: "large", order: 8 },
+  { id: "analysts", label: "Analyst Workload", visible: true, size: "large", order: 9 },
+  { id: "queue", label: "Active Incident Queue", visible: true, size: "large", order: 10 },
 ];
 
 const SOC = () => {
@@ -526,6 +565,7 @@ const SOC = () => {
                   eventCorrelation={eventCorrelation}
                   analystWorkload={analystWorkload}
                   filteredIncidents={filteredIncidents}
+                  securityEventHeatmap={securityEventHeatmap}
                   getSeverityColor={getSeverityColor}
                   getSeverityBadgeVariant={getSeverityBadgeVariant}
                   getStatusBadgeVariant={getStatusBadgeVariant}
