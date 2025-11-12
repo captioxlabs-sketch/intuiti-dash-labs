@@ -3,6 +3,10 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard } from "@/components/MetricCard";
 import { FilterBar } from "@/components/FilterBar";
 import { DrillDownModal } from "@/components/DrillDownModal";
+import { LoadingState } from "@/components/LoadingState";
+import { Widget } from "@/components/WidgetCustomizer";
+import { useRealTimeData } from "@/hooks/useRealTimeData";
+import { useDataExport } from "@/hooks/useDataExport";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -155,11 +159,82 @@ const SOC = () => {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [drillDownData, setDrillDownData] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Widget customization
+  const [widgets, setWidgets] = useState<Widget[]>([
+    { id: "alerts", label: "Active Alerts", visible: true, size: "medium" },
+    { id: "incidents", label: "Open Incidents", visible: true, size: "medium" },
+    { id: "mttr", label: "Avg MTTR", visible: true, size: "medium" },
+    { id: "efficiency", label: "Analyst Efficiency", visible: true, size: "medium" },
+    { id: "alert-chart", label: "Alert Distribution", visible: true, size: "large" },
+    { id: "incident-chart", label: "Incident Queue", visible: true, size: "large" },
+    { id: "mttr-chart", label: "MTTR Trends", visible: true, size: "large" },
+    { id: "correlation-chart", label: "Event Correlation", visible: true, size: "large" },
+    { id: "analysts", label: "Analyst Workload", visible: true, size: "large" },
+    { id: "queue", label: "Incident Queue", visible: true, size: "large" },
+  ]);
+
+  // Real-time data updates
+  const { data: liveData, lastUpdate, isLive, toggleLive } = useRealTimeData(
+    { alertCount: 152, incidentCount: 45 },
+    (prev) => ({
+      alertCount: Math.max(100, prev.alertCount + Math.floor(Math.random() * 20 - 10)),
+      incidentCount: Math.max(30, prev.incidentCount + Math.floor(Math.random() * 6 - 3)),
+    }),
+    { refreshInterval: 8000 }
+  );
+
+  // Export functionality
+  const { exportData } = useDataExport();
 
   const handleReset = () => {
     setDateRange({ from: new Date(2024, 0, 1), to: new Date() });
     setSelectedCategory("all");
     setSelectedCard(null);
+    setSearchValue("");
+  };
+
+  const handleExport = (format: "csv" | "json" | "pdf") => {
+    const exportDataset = {
+      incidents: filteredIncidents,
+      analysts: analystWorkload,
+      metrics: {
+        activeAlerts: liveData.alertCount,
+        openIncidents: liveData.incidentCount,
+        avgMTTR: Math.round(24 * multiplier),
+        efficiency: "91%",
+      },
+    };
+    exportData(exportDataset, format, "soc-dashboard");
+  };
+
+  const toggleWidgetVisibility = (id: string) => {
+    setWidgets((prev) =>
+      prev.map((w) => (w.id === id ? { ...w, visible: !w.visible } : w))
+    );
+  };
+
+  const changeWidgetSize = (id: string, size: "small" | "medium" | "large") => {
+    setWidgets((prev) =>
+      prev.map((w) => (w.id === id ? { ...w, size } : w))
+    );
+  };
+
+  const resetLayout = () => {
+    setWidgets([
+      { id: "alerts", label: "Active Alerts", visible: true, size: "medium" },
+      { id: "incidents", label: "Open Incidents", visible: true, size: "medium" },
+      { id: "mttr", label: "Avg MTTR", visible: true, size: "medium" },
+      { id: "efficiency", label: "Analyst Efficiency", visible: true, size: "medium" },
+      { id: "alert-chart", label: "Alert Distribution", visible: true, size: "large" },
+      { id: "incident-chart", label: "Incident Queue", visible: true, size: "large" },
+      { id: "mttr-chart", label: "MTTR Trends", visible: true, size: "large" },
+      { id: "correlation-chart", label: "Event Correlation", visible: true, size: "large" },
+      { id: "analysts", label: "Analyst Workload", visible: true, size: "large" },
+      { id: "queue", label: "Incident Queue", visible: true, size: "large" },
+    ]);
   };
 
   const handleCardClick = (cardId: string) => {
@@ -188,11 +263,24 @@ const SOC = () => {
   const multiplier = getMetricMultiplier();
 
   const filteredIncidents = useMemo(() => {
-    if (selectedCategory === "all") return activeIncidents;
-    return activeIncidents.filter(inc => 
-      inc.title.toLowerCase().includes(selectedCategory)
-    );
-  }, [selectedCategory]);
+    let results = activeIncidents;
+    
+    if (selectedCategory !== "all") {
+      results = results.filter(inc => 
+        inc.title.toLowerCase().includes(selectedCategory)
+      );
+    }
+    
+    if (searchValue) {
+      results = results.filter(inc =>
+        inc.title.toLowerCase().includes(searchValue.toLowerCase()) ||
+        inc.id.toLowerCase().includes(searchValue.toLowerCase()) ||
+        inc.assignedTo.toLowerCase().includes(searchValue.toLowerCase())
+      );
+    }
+    
+    return results;
+  }, [selectedCategory, searchValue]);
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -222,6 +310,19 @@ const SOC = () => {
     }
   };
 
+  const getWidget = (id: string) => widgets.find((w) => w.id === id);
+  const isWidgetVisible = (id: string) => getWidget(id)?.visible ?? true;
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="p-6">
+          <LoadingState type="skeleton" message="Loading SOC dashboard..." />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6 animate-fade-in">
@@ -245,12 +346,26 @@ const SOC = () => {
           onCategoryChange={setSelectedCategory}
           categories={categoryFilters}
           onReset={handleReset}
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          searchPlaceholder="Search incidents, IDs, analysts..."
+          onExport={handleExport}
+          isLive={isLive}
+          lastUpdate={lastUpdate}
+          onToggleLive={toggleLive}
+          widgets={widgets}
+          onToggleWidgetVisibility={toggleWidgetVisibility}
+          onWidgetSizeChange={changeWidgetSize}
+          onResetLayout={resetLayout}
         />
 
+        {isWidgetVisible("alerts") || isWidgetVisible("incidents") || 
+         isWidgetVisible("mttr") || isWidgetVisible("efficiency") ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {isWidgetVisible("alerts") && (
           <MetricCard
             title="Active Alerts"
-            value={Math.round(152 * multiplier)}
+            value={Math.round(liveData.alertCount * multiplier)}
             change="+18% from last hour"
             changeType="negative"
             icon={Bell}
@@ -258,9 +373,11 @@ const SOC = () => {
             onClick={() => handleCardClick("alerts")}
             isSelected={selectedCard === "alerts"}
           />
+          )}
+          {isWidgetVisible("incidents") && (
           <MetricCard
             title="Open Incidents"
-            value={Math.round(45 * multiplier)}
+            value={Math.round(liveData.incidentCount * multiplier)}
             change="-8% from yesterday"
             changeType="positive"
             icon={AlertTriangle}
@@ -268,6 +385,8 @@ const SOC = () => {
             onClick={() => handleCardClick("incidents")}
             isSelected={selectedCard === "incidents"}
           />
+          )}
+          {isWidgetVisible("mttr") && (
           <MetricCard
             title="Avg MTTR"
             value={`${Math.round(24 * multiplier)}m`}
@@ -278,6 +397,8 @@ const SOC = () => {
             onClick={() => handleCardClick("mttr")}
             isSelected={selectedCard === "mttr"}
           />
+          )}
+          {isWidgetVisible("efficiency") && (
           <MetricCard
             title="Analyst Efficiency"
             value="91%"
@@ -288,10 +409,14 @@ const SOC = () => {
             onClick={() => handleCardClick("efficiency")}
             isSelected={selectedCard === "efficiency"}
           />
+          )}
         </div>
+        ) : null}
 
+        {(isWidgetVisible("alert-chart") || isWidgetVisible("incident-chart")) && (
         <div className="grid gap-4 md:grid-cols-2">
-          <Card className="animate-fade-in">
+          {isWidgetVisible("alert-chart") && (
+          <Card className="animate-fade-in hover-scale transition-all">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-primary" />
@@ -349,8 +474,10 @@ const SOC = () => {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+          )}
 
-          <Card className="animate-fade-in">
+          {isWidgetVisible("incident-chart") && (
+          <Card className="animate-fade-in hover-scale transition-all">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-accent" />
@@ -384,10 +511,14 @@ const SOC = () => {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+          )}
         </div>
+        )}
 
+        {(isWidgetVisible("mttr-chart") || isWidgetVisible("correlation-chart")) && (
         <div className="grid gap-4 md:grid-cols-2">
-          <Card className="animate-fade-in">
+          {isWidgetVisible("mttr-chart") && (
+          <Card className="animate-fade-in hover-scale transition-all">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-primary" />
@@ -428,8 +559,10 @@ const SOC = () => {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+          )}
 
-          <Card className="animate-fade-in">
+          {isWidgetVisible("correlation-chart") && (
+          <Card className="animate-fade-in hover-scale transition-all">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-accent" />
@@ -472,9 +605,12 @@ const SOC = () => {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+          )}
         </div>
+        )}
 
-        <Card className="animate-fade-in">
+        {isWidgetVisible("analysts") && (
+        <Card className="animate-fade-in hover-scale transition-all">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
@@ -517,8 +653,10 @@ const SOC = () => {
             </div>
           </CardContent>
         </Card>
+        )}
 
-        <Card className="animate-fade-in">
+        {isWidgetVisible("queue") && (
+        <Card className="animate-fade-in hover-scale transition-all">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
@@ -579,6 +717,7 @@ const SOC = () => {
             </div>
           </CardContent>
         </Card>
+        )}
 
         <DrillDownModal
           open={isModalOpen}
