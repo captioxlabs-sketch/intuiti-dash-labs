@@ -2,9 +2,12 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard } from "@/components/MetricCard";
 import { FilterBar } from "@/components/FilterBar";
+import { CustomizationPanel } from "@/components/CustomizationPanel";
+import { useDashboardLayout } from "@/hooks/useDashboardLayout";
 import { DateRange } from "react-day-picker";
 import { Users, DollarSign, TrendingUp, Activity } from "lucide-react";
 import { addDays, subDays } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const metrics = [
   { value: "all", label: "All Metrics" },
@@ -20,6 +23,15 @@ const Overview = () => {
   });
   const [selectedMetric, setSelectedMetric] = useState("all");
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  
+  const {
+    getSortedWidgets,
+    getWidgetConfig,
+    toggleVisibility,
+    setSize,
+    reorderWidgets,
+    resetLayout,
+  } = useDashboardLayout("overview-layout");
 
   const handleReset = () => {
     setDateRange({
@@ -41,6 +53,44 @@ const Overview = () => {
   };
 
   const multiplier = getMetricMultiplier();
+  
+  const widgetMap = {
+    users: {
+      title: "Total Users",
+      value: Math.round(12345 * multiplier).toLocaleString(),
+      change: `+${(12.5 * multiplier).toFixed(1)}% from last period`,
+      changeType: "positive" as const,
+      icon: Users,
+      iconColor: "text-chart-1",
+    },
+    revenue: {
+      title: "Revenue",
+      value: `$${Math.round(45678 * multiplier).toLocaleString()}`,
+      change: `+${(8.2 * multiplier).toFixed(1)}% from last period`,
+      changeType: "positive" as const,
+      icon: DollarSign,
+      iconColor: "text-chart-2",
+    },
+    growth: {
+      title: "Growth Rate",
+      value: `${(23.5 * multiplier).toFixed(1)}%`,
+      change: `+${(3.1 * multiplier).toFixed(1)}% from last period`,
+      changeType: "positive" as const,
+      icon: TrendingUp,
+      iconColor: "text-chart-3",
+    },
+    sessions: {
+      title: "Active Sessions",
+      value: Math.round(892 * multiplier).toString(),
+      change: "Live tracking",
+      changeType: "neutral" as const,
+      icon: Activity,
+      iconColor: "text-chart-4",
+    },
+  };
+
+  const sortedWidgets = getSortedWidgets();
+
   return (
     <DashboardLayout>
       <div className="p-8">
@@ -63,52 +113,38 @@ const Overview = () => {
         />
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          {(selectedMetric === "all" || selectedMetric === "users") && (
-            <MetricCard
-              title="Total Users"
-              value={Math.round(12345 * multiplier).toLocaleString()}
-              change={`+${(12.5 * multiplier).toFixed(1)}% from last period`}
-              changeType="positive"
-              icon={Users}
-              iconColor="text-chart-1"
-              onClick={() => handleCardClick("users")}
-              isSelected={selectedCard === "users"}
-            />
-          )}
-          {(selectedMetric === "all" || selectedMetric === "revenue") && (
-            <MetricCard
-              title="Revenue"
-              value={`$${Math.round(45678 * multiplier).toLocaleString()}`}
-              change={`+${(8.2 * multiplier).toFixed(1)}% from last period`}
-              changeType="positive"
-              icon={DollarSign}
-              iconColor="text-chart-2"
-              onClick={() => handleCardClick("revenue")}
-              isSelected={selectedCard === "revenue"}
-            />
-          )}
-          {(selectedMetric === "all" || selectedMetric === "growth") && (
-            <MetricCard
-              title="Growth Rate"
-              value={`${(23.5 * multiplier).toFixed(1)}%`}
-              change={`+${(3.1 * multiplier).toFixed(1)}% from last period`}
-              changeType="positive"
-              icon={TrendingUp}
-              iconColor="text-chart-3"
-              onClick={() => handleCardClick("growth")}
-              isSelected={selectedCard === "growth"}
-            />
-          )}
-          <MetricCard
-            title="Active Sessions"
-            value={Math.round(892 * multiplier).toString()}
-            change="Live tracking"
-            changeType="neutral"
-            icon={Activity}
-            iconColor="text-chart-4"
-            onClick={() => handleCardClick("sessions")}
-            isSelected={selectedCard === "sessions"}
-          />
+          {sortedWidgets.map((widget) => {
+            const config = getWidgetConfig(widget.id);
+            const widgetData = widgetMap[widget.id as keyof typeof widgetMap];
+            
+            if (!config?.visible || !widgetData) return null;
+            
+            // Apply metric filter
+            if (selectedMetric !== "all" && widget.id !== selectedMetric && widget.id !== "sessions") {
+              return null;
+            }
+
+            const sizeClass = {
+              small: "md:col-span-1",
+              medium: "md:col-span-1",
+              large: "md:col-span-2",
+            }[config.size];
+
+            return (
+              <div key={widget.id} className={cn(sizeClass, "animate-fade-in")}>
+                <MetricCard
+                  title={widgetData.title}
+                  value={widgetData.value}
+                  change={widgetData.change}
+                  changeType={widgetData.changeType}
+                  icon={widgetData.icon}
+                  iconColor={widgetData.iconColor}
+                  onClick={() => handleCardClick(widget.id)}
+                  isSelected={selectedCard === widget.id}
+                />
+              </div>
+            );
+          })}
         </div>
 
         <div className="bg-gradient-to-br from-primary/10 via-accent/10 to-transparent rounded-2xl p-8 border border-border">
@@ -141,6 +177,14 @@ const Overview = () => {
           </div>
         </div>
       </div>
+
+      <CustomizationPanel
+        widgets={sortedWidgets}
+        onToggleVisibility={toggleVisibility}
+        onSetSize={setSize}
+        onReorder={reorderWidgets}
+        onReset={resetLayout}
+      />
     </DashboardLayout>
   );
 };
