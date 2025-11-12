@@ -5,15 +5,15 @@ import { FilterBar } from "@/components/FilterBar";
 import { CustomizationPanel } from "@/components/CustomizationPanel";
 import { useDashboardLayout } from "@/hooks/useDashboardLayout";
 import { DateRange } from "react-day-picker";
-import { Users, DollarSign, TrendingUp, Activity } from "lucide-react";
+import { Shield, AlertTriangle, CheckCircle2, Activity } from "lucide-react";
 import { addDays, subDays } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const metrics = [
   { value: "all", label: "All Metrics" },
-  { value: "users", label: "Users Only" },
-  { value: "revenue", label: "Revenue Only" },
-  { value: "growth", label: "Growth Only" },
+  { value: "threats", label: "Threats Only" },
+  { value: "blocked", label: "Blocked Only" },
+  { value: "scanned", label: "Scanned Only" },
 ];
 
 const Overview = () => {
@@ -55,34 +55,34 @@ const Overview = () => {
   const multiplier = getMetricMultiplier();
   
   const widgetMap = {
-    users: {
-      title: "Total Users",
-      value: Math.round(12345 * multiplier).toLocaleString(),
-      change: `+${(12.5 * multiplier).toFixed(1)}% from last period`,
+    threats: {
+      title: "Threats Detected",
+      value: Math.round(1247 * multiplier).toLocaleString(),
+      change: `-${(15.3 * multiplier).toFixed(1)}% from last period`,
       changeType: "positive" as const,
-      icon: Users,
-      iconColor: "text-chart-1",
+      icon: AlertTriangle,
+      iconColor: "text-chart-5",
     },
-    revenue: {
-      title: "Revenue",
-      value: `$${Math.round(45678 * multiplier).toLocaleString()}`,
-      change: `+${(8.2 * multiplier).toFixed(1)}% from last period`,
+    blocked: {
+      title: "Threats Blocked",
+      value: Math.round(1189 * multiplier).toLocaleString(),
+      change: `95.3% success rate`,
       changeType: "positive" as const,
-      icon: DollarSign,
+      icon: Shield,
       iconColor: "text-chart-2",
     },
-    growth: {
-      title: "Growth Rate",
-      value: `${(23.5 * multiplier).toFixed(1)}%`,
-      change: `+${(3.1 * multiplier).toFixed(1)}% from last period`,
+    scanned: {
+      title: "Endpoints Scanned",
+      value: Math.round(8542 * multiplier).toLocaleString(),
+      change: `+${(4.7 * multiplier).toFixed(1)}% from last period`,
       changeType: "positive" as const,
-      icon: TrendingUp,
+      icon: CheckCircle2,
       iconColor: "text-chart-3",
     },
     sessions: {
-      title: "Active Sessions",
-      value: Math.round(892 * multiplier).toString(),
-      change: "Live tracking",
+      title: "Active Monitors",
+      value: Math.round(127 * multiplier).toString(),
+      change: "Live monitoring",
       changeType: "neutral" as const,
       icon: Activity,
       iconColor: "text-chart-4",
@@ -96,10 +96,10 @@ const Overview = () => {
       <div className="p-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">
-            Dashboard Showcase
+            Network Security Overview
           </h1>
           <p className="text-muted-foreground text-lg">
-            Explore the most intuitive and dynamic dashboard examples
+            Monitor threats, vulnerabilities, and security metrics in real-time
           </p>
         </div>
 
@@ -120,7 +120,12 @@ const Overview = () => {
             if (!config?.visible || !widgetData) return null;
             
             // Apply metric filter
-            if (selectedMetric !== "all" && widget.id !== selectedMetric && widget.id !== "sessions") {
+            const metricMap: Record<string, string> = {
+              users: "threats",
+              revenue: "blocked", 
+              growth: "scanned"
+            };
+            if (selectedMetric !== "all" && metricMap[selectedMetric] !== widget.id && widget.id !== "sessions") {
               return null;
             }
 
@@ -149,29 +154,29 @@ const Overview = () => {
 
         <div className="bg-gradient-to-br from-primary/10 via-accent/10 to-transparent rounded-2xl p-8 border border-border">
           <h2 className="text-2xl font-bold mb-4 text-foreground">
-            Welcome to Dashboard Hub
+            Network Security Command Center
           </h2>
           <p className="text-muted-foreground mb-6 max-w-2xl">
-            Discover beautifully crafted, highly intuitive dashboard examples designed for modern applications. 
-            Each dashboard showcases best practices in data visualization, user experience, and interface design.
+            Comprehensive security monitoring with real-time threat detection, vulnerability scanning, and incident response. 
+            Advanced analytics and AI-powered insights to protect your network infrastructure.
           </p>
           <div className="flex gap-4 flex-wrap">
             <div className="bg-card border border-border rounded-lg p-4 flex-1 min-w-[200px]">
-              <h3 className="font-semibold text-foreground mb-2">Analytics Dashboard</h3>
+              <h3 className="font-semibold text-foreground mb-2">Threat Intelligence</h3>
               <p className="text-sm text-muted-foreground">
-                Advanced metrics and visualizations for data-driven insights
+                Real-time monitoring and analysis of security threats and vulnerabilities
               </p>
             </div>
             <div className="bg-card border border-border rounded-lg p-4 flex-1 min-w-[200px]">
-              <h3 className="font-semibold text-foreground mb-2">Sales Dashboard</h3>
+              <h3 className="font-semibold text-foreground mb-2">Security Incidents</h3>
               <p className="text-sm text-muted-foreground">
-                Track performance, revenue, and conversion metrics
+                Track malware, phishing, DDoS attacks, and intrusion attempts
               </p>
             </div>
             <div className="bg-card border border-border rounded-lg p-4 flex-1 min-w-[200px]">
-              <h3 className="font-semibold text-foreground mb-2">Project Management</h3>
+              <h3 className="font-semibold text-foreground mb-2">Compliance Projects</h3>
               <p className="text-sm text-muted-foreground">
-                Monitor tasks, progress, and team productivity
+                Monitor security posture, policy compliance, and audit readiness
               </p>
             </div>
           </div>

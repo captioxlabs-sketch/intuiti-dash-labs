@@ -5,7 +5,7 @@ import { FilterBar } from "@/components/FilterBar";
 import { DrillDownModal } from "@/components/DrillDownModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRange } from "react-day-picker";
-import { CheckCircle2, Clock, AlertCircle, FolderKanban } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, Shield } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { addDays, subDays } from "date-fns";
 import {
@@ -18,24 +18,24 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const projectStatusData = [
-  { status: "Completed", count: 24 },
-  { status: "In Progress", count: 12 },
-  { status: "On Hold", count: 6 },
-  { status: "Planned", count: 8 },
+const complianceStatusData = [
+  { status: "Compliant", count: 18 },
+  { status: "In Progress", count: 9 },
+  { status: "Non-Compliant", count: 3 },
+  { status: "Planned", count: 6 },
 ];
 
-const projects = [
-  { name: "Website Redesign", progress: 85, status: "In Progress", team: 5 },
-  { name: "Mobile App Launch", progress: 60, status: "In Progress", team: 8 },
-  { name: "API Integration", progress: 100, status: "Completed", team: 3 },
-  { name: "Database Migration", progress: 40, status: "In Progress", team: 4 },
-  { name: "Marketing Campaign", progress: 95, status: "In Progress", team: 6 },
+const securityProjects = [
+  { name: "SOC 2 Compliance", progress: 85, status: "In Progress", team: 5 },
+  { name: "PCI-DSS Certification", progress: 60, status: "In Progress", team: 8 },
+  { name: "GDPR Audit", progress: 100, status: "Compliant", team: 3 },
+  { name: "ISO 27001 Framework", progress: 40, status: "In Progress", team: 4 },
+  { name: "Zero Trust Implementation", progress: 95, status: "In Progress", team: 6 },
 ];
 
 const statusCategories = [
   { value: "all", label: "All Projects" },
-  { value: "completed", label: "Completed" },
+  { value: "compliant", label: "Compliant" },
   { value: "in-progress", label: "In Progress" },
   { value: "planned", label: "Planned" },
 ];
@@ -90,8 +90,8 @@ const Projects = () => {
   };
 
   const filteredProjects = useMemo(() => {
-    if (selectedStatus === "all") return projects;
-    return projects.filter(
+    if (selectedStatus === "all") return securityProjects;
+    return securityProjects.filter(
       (project) => project.status.toLowerCase().replace(" ", "-") === selectedStatus
     );
   }, [selectedStatus]);
@@ -106,17 +106,17 @@ const Projects = () => {
 
   // Filter data based on selected card
   const getFilteredStatusData = () => {
-    if (!selectedCard) return projectStatusData;
+    if (!selectedCard) return complianceStatusData;
     
     switch (selectedCard) {
-      case "completed":
-        return projectStatusData.filter(d => d.status === "Completed");
+      case "compliant":
+        return complianceStatusData.filter(d => d.status === "Compliant");
       case "in-progress":
-        return projectStatusData.filter(d => d.status === "In Progress");
-      case "on-hold":
-        return projectStatusData.filter(d => d.status === "On Hold");
+        return complianceStatusData.filter(d => d.status === "In Progress");
+      case "non-compliant":
+        return complianceStatusData.filter(d => d.status === "Non-Compliant");
       default:
-        return projectStatusData;
+        return complianceStatusData;
     }
   };
   return (
@@ -124,10 +124,10 @@ const Projects = () => {
       <div className="p-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">
-            Project Management
+            Security & Compliance Projects
           </h1>
           <p className="text-muted-foreground text-lg">
-            Monitor project progress and team productivity
+            Monitor compliance status, security initiatives, and audit readiness
           </p>
         </div>
 
@@ -142,28 +142,28 @@ const Projects = () => {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
           <MetricCard
-            title="Active Projects"
-            value={Math.round(18 * multiplier).toString()}
-            change={`${Math.round(3 * multiplier)} new this period`}
+            title="Active Initiatives"
+            value={Math.round(14 * multiplier).toString()}
+            change={`${Math.round(2 * multiplier)} new this period`}
             changeType="positive"
-            icon={FolderKanban}
+            icon={Shield}
             iconColor="text-chart-1"
             onClick={() => handleCardClick("active")}
             isSelected={selectedCard === "active"}
           />
           <MetricCard
-            title="Completed"
-            value={Math.round(24 * multiplier).toString()}
-            change={`+${Math.round(4 * multiplier)} this period`}
+            title="Compliant"
+            value={Math.round(18 * multiplier).toString()}
+            change={`+${Math.round(3 * multiplier)} this period`}
             changeType="positive"
             icon={CheckCircle2}
             iconColor="text-chart-2"
-            onClick={() => handleCardClick("completed")}
-            isSelected={selectedCard === "completed"}
+            onClick={() => handleCardClick("compliant")}
+            isSelected={selectedCard === "compliant"}
           />
           <MetricCard
             title="In Progress"
-            value={Math.round(12 * multiplier).toString()}
+            value={Math.round(9 * multiplier).toString()}
             change="On track"
             changeType="neutral"
             icon={Clock}
@@ -172,14 +172,14 @@ const Projects = () => {
             isSelected={selectedCard === "in-progress"}
           />
           <MetricCard
-            title="Overdue"
-            value="2"
-            change="Needs attention"
+            title="Non-Compliant"
+            value="3"
+            change="Requires action"
             changeType="negative"
             icon={AlertCircle}
             iconColor="text-chart-5"
-            onClick={() => handleCardClick("on-hold")}
-            isSelected={selectedCard === "on-hold"}
+            onClick={() => handleCardClick("non-compliant")}
+            isSelected={selectedCard === "non-compliant"}
           />
         </div>
 
@@ -187,7 +187,7 @@ const Projects = () => {
           <Card className="animate-fade-in">
             <CardHeader>
               <CardTitle>
-                Project Status Distribution
+                Compliance Status Distribution
                 {selectedCard && <span className="text-sm font-normal text-muted-foreground ml-2">
                   (Filtered by {selectedCard})
                 </span>}
@@ -215,7 +215,7 @@ const Projects = () => {
 
           <Card className="animate-fade-in">
             <CardHeader>
-              <CardTitle>Recent Projects</CardTitle>
+              <CardTitle>Recent Security Projects</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -230,7 +230,7 @@ const Projects = () => {
                       </div>
                       <span
                         className={`text-sm font-medium ${
-                          project.status === "Completed"
+                          project.status === "Compliant"
                             ? "text-chart-2"
                             : "text-chart-3"
                         }`}

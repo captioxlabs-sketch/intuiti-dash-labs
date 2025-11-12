@@ -5,7 +5,7 @@ import { FilterBar } from "@/components/FilterBar";
 import { DrillDownModal } from "@/components/DrillDownModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRange } from "react-day-picker";
-import { DollarSign, ShoppingCart, TrendingUp, Package } from "lucide-react";
+import { Shield, Bug, Lock, AlertTriangle } from "lucide-react";
 import { addDays, subDays } from "date-fns";
 import {
   AreaChart,
@@ -21,31 +21,31 @@ import {
   Line,
 } from "recharts";
 
-const revenueData = [
-  { month: "Jan", revenue: 12000, orders: 145 },
-  { month: "Feb", revenue: 15000, orders: 178 },
-  { month: "Mar", revenue: 18000, orders: 210 },
-  { month: "Apr", revenue: 22000, orders: 245 },
-  { month: "May", revenue: 25000, orders: 289 },
-  { month: "Jun", revenue: 29000, orders: 325 },
+const threatData = [
+  { month: "Jan", threats: 342, blocked: 328 },
+  { month: "Feb", threats: 298, blocked: 285 },
+  { month: "Mar", threats: 412, blocked: 395 },
+  { month: "Apr", threats: 378, blocked: 362 },
+  { month: "May", threats: 445, blocked: 428 },
+  { month: "Jun", threats: 389, blocked: 374 },
 ];
 
-const productData = [
-  { category: "Electronics", sales: 12500 },
-  { category: "Clothing", sales: 8900 },
-  { category: "Home & Garden", sales: 6700 },
-  { category: "Sports", sales: 5400 },
-  { category: "Books", sales: 3200 },
+const attackTypeData = [
+  { category: "Malware", incidents: 892 },
+  { category: "Phishing", incidents: 734 },
+  { category: "DDoS", incidents: 521 },
+  { category: "SQL Injection", incidents: 412 },
+  { category: "Brute Force", incidents: 387 },
 ];
 
 const metrics = [
   { value: "all", label: "All Metrics" },
-  { value: "revenue", label: "Revenue" },
-  { value: "orders", label: "Orders" },
-  { value: "products", label: "Products" },
+  { value: "threats", label: "Threats" },
+  { value: "blocked", label: "Blocked" },
+  { value: "incidents", label: "Incidents" },
 ];
 
-const Sales = () => {
+const Threats = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 180),
     to: new Date(),
@@ -124,30 +124,30 @@ const Sales = () => {
   const multiplier = getMetricMultiplier();
 
   // Filter data based on selected card
-  const getFilteredRevenueData = () => {
-    if (!selectedCard) return revenueData;
+  const getFilteredThreatData = () => {
+    if (!selectedCard) return threatData;
     
     switch (selectedCard) {
-      case "revenue":
-        return revenueData.map(d => ({ ...d, orders: 0 }));
-      case "orders":
-        return revenueData.map(d => ({ ...d, revenue: 0 }));
+      case "threats":
+        return threatData.map(d => ({ ...d, blocked: 0 }));
+      case "blocked":
+        return threatData.map(d => ({ ...d, threats: 0 }));
       default:
-        return revenueData;
+        return threatData;
     }
   };
 
-  const getFilteredProductData = () => {
-    if (!selectedCard || selectedCard === "products") return productData;
+  const getFilteredAttackData = () => {
+    if (!selectedCard || selectedCard === "incidents") return attackTypeData;
     return [];
   };
   return (
     <DashboardLayout>
       <div className="p-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Sales Dashboard</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Threat Intelligence</h1>
           <p className="text-muted-foreground text-lg">
-            Track revenue, orders, and product performance
+            Monitor security threats, attacks, and incident response
           </p>
         </div>
 
@@ -161,50 +161,50 @@ const Sales = () => {
         />
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          {(selectedMetric === "all" || selectedMetric === "revenue") && (
+          {(selectedMetric === "all" || selectedMetric === "threats") && (
             <MetricCard
-              title="Total Revenue"
-              value={`$${Math.round(121 * multiplier)}K`}
-              change={`+${(24.5 * multiplier).toFixed(1)}% from last period`}
+              title="Total Threats"
+              value={Math.round(2264 * multiplier).toLocaleString()}
+              change={`-${(8.3 * multiplier).toFixed(1)}% from last period`}
               changeType="positive"
-              icon={DollarSign}
-              iconColor="text-chart-2"
-              onClick={() => handleCardClick("revenue")}
-              isSelected={selectedCard === "revenue"}
+              icon={AlertTriangle}
+              iconColor="text-chart-5"
+              onClick={() => handleCardClick("threats")}
+              isSelected={selectedCard === "threats"}
             />
           )}
-          {(selectedMetric === "all" || selectedMetric === "orders") && (
+          {(selectedMetric === "all" || selectedMetric === "blocked") && (
             <MetricCard
-              title="Orders"
-              value={Math.round(1392 * multiplier).toLocaleString()}
-              change={`+${(12.3 * multiplier).toFixed(1)}% from last period`}
+              title="Threats Blocked"
+              value={Math.round(2172 * multiplier).toLocaleString()}
+              change={`96% success rate`}
               changeType="positive"
-              icon={ShoppingCart}
-              iconColor="text-chart-1"
-              onClick={() => handleCardClick("orders")}
-              isSelected={selectedCard === "orders"}
+              icon={Shield}
+              iconColor="text-chart-2"
+              onClick={() => handleCardClick("blocked")}
+              isSelected={selectedCard === "blocked"}
             />
           )}
           <MetricCard
-            title="Conversion Rate"
-            value={`${(3.2 * multiplier).toFixed(1)}%`}
-            change={`+${(0.8 * multiplier).toFixed(1)}% from last period`}
+            title="Critical Incidents"
+            value={Math.round(23 * multiplier).toString()}
+            change={`-${(12.1 * multiplier).toFixed(1)}% from last period`}
             changeType="positive"
-            icon={TrendingUp}
+            icon={Bug}
             iconColor="text-chart-3"
-            onClick={() => handleCardClick("conversion")}
-            isSelected={selectedCard === "conversion"}
+            onClick={() => handleCardClick("critical")}
+            isSelected={selectedCard === "critical"}
           />
-          {(selectedMetric === "all" || selectedMetric === "products") && (
+          {(selectedMetric === "all" || selectedMetric === "incidents") && (
             <MetricCard
-              title="Products Sold"
-              value={Math.round(8456 * multiplier).toLocaleString()}
-              change={`+${(18.9 * multiplier).toFixed(1)}% from last period`}
-              changeType="positive"
-              icon={Package}
+              title="Active Incidents"
+              value={Math.round(147 * multiplier).toString()}
+              change={`+${(5.7 * multiplier).toFixed(1)}% from last period`}
+              changeType="neutral"
+              icon={Lock}
               iconColor="text-chart-4"
-              onClick={() => handleCardClick("products")}
-              isSelected={selectedCard === "products"}
+              onClick={() => handleCardClick("incidents")}
+              isSelected={selectedCard === "incidents"}
             />
           )}
         </div>
@@ -213,7 +213,7 @@ const Sales = () => {
           <Card className="animate-fade-in">
             <CardHeader>
               <CardTitle>
-                Revenue Trend
+                Threat Activity Trend
                 {selectedCard && <span className="text-sm font-normal text-muted-foreground ml-2">
                   (Filtered by {selectedCard})
                 </span>}
@@ -221,11 +221,11 @@ const Sales = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={350}>
-                <AreaChart data={getFilteredRevenueData()}>
+                <AreaChart data={getFilteredThreatData()}>
                   <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
+                    <linearGradient id="colorThreats" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--chart-5))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--chart-5))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -240,10 +240,10 @@ const Sales = () => {
                   />
                   <Area
                     type="monotone"
-                    dataKey="revenue"
-                    stroke="hsl(var(--chart-2))"
+                    dataKey="threats"
+                    stroke="hsl(var(--chart-5))"
                     fillOpacity={1}
-                    fill="url(#colorRevenue)"
+                    fill="url(#colorThreats)"
                     strokeWidth={3}
                   />
                 </AreaChart>
@@ -256,15 +256,15 @@ const Sales = () => {
           <Card className="animate-fade-in">
             <CardHeader>
               <CardTitle>
-                Sales by Category
-                {selectedCard === "products" && <span className="text-sm font-normal text-muted-foreground ml-2">
-                  (Filtered by products)
+                Attack Types
+                {selectedCard === "incidents" && <span className="text-sm font-normal text-muted-foreground ml-2">
+                  (Filtered by incidents)
                 </span>}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={getFilteredProductData()} layout="vertical">
+                <BarChart data={getFilteredAttackData()} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
                   <YAxis dataKey="category" type="category" stroke="hsl(var(--muted-foreground))" width={120} />
@@ -275,7 +275,7 @@ const Sales = () => {
                       borderRadius: "var(--radius)",
                     }}
                   />
-                  <Bar dataKey="sales" fill="hsl(var(--chart-1))" radius={[0, 8, 8, 0]} />
+                  <Bar dataKey="incidents" fill="hsl(var(--chart-1))" radius={[0, 8, 8, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -284,15 +284,15 @@ const Sales = () => {
           <Card className="animate-fade-in">
             <CardHeader>
               <CardTitle>
-                Order Volume
-                {selectedCard === "orders" && <span className="text-sm font-normal text-muted-foreground ml-2">
-                  (Filtered by orders)
+                Blocked Threats
+                {selectedCard === "blocked" && <span className="text-sm font-normal text-muted-foreground ml-2">
+                  (Filtered by blocked)
                 </span>}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={getFilteredRevenueData()}>
+                <LineChart data={getFilteredThreatData()}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />
@@ -305,10 +305,10 @@ const Sales = () => {
                   />
                   <Line
                     type="monotone"
-                    dataKey="orders"
-                    stroke="hsl(var(--chart-3))"
+                    dataKey="blocked"
+                    stroke="hsl(var(--chart-2))"
                     strokeWidth={3}
-                    dot={{ fill: "hsl(var(--chart-3))", r: 5 }}
+                    dot={{ fill: "hsl(var(--chart-2))", r: 5 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -325,4 +325,4 @@ const Sales = () => {
   );
 };
 
-export default Sales;
+export default Threats;
