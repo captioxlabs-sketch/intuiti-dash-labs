@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard } from "@/components/MetricCard";
 import { ComparisonMetricCard } from "@/components/ComparisonMetricCard";
+import { StatusIndicator, StatusBadge, StatusDot } from "@/components/StatusIndicator";
 import { FilterBar } from "@/components/FilterBar";
 import { DrillDownModal } from "@/components/DrillDownModal";
 import { LoadingState } from "@/components/LoadingState";
@@ -401,13 +402,20 @@ const SOC = () => {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6 animate-fade-in">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Security Operations Center
-          </h2>
-          <p className="text-muted-foreground mt-2">
-            Real-time monitoring, incident management, and threat response
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Security Operations Center
+            </h2>
+            <p className="text-muted-foreground mt-2">
+              Real-time monitoring, incident management, and threat response
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <StatusIndicator status="success" label="Operational" showIcon />
+            <StatusIndicator status="warning" count={12} label="Warnings" />
+            <StatusIndicator status="critical" count={3} label="Critical" />
+          </div>
         </div>
 
         <FilterBar

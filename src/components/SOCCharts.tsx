@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { DraggableWidget } from "./DraggableWidget";
 import { HeatmapChart, HeatmapDataPoint } from "./HeatmapChart";
+import { StatusIndicator, StatusBadge, StatusDot } from "./StatusIndicator";
 import {
   Shield,
   AlertTriangle,
@@ -336,53 +337,89 @@ export const SOCCharts = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {filteredIncidents.map((incident) => (
-                  <div
-                    key={incident.id}
-                    className="border border-border rounded-lg p-4 hover:bg-accent/5 transition-colors"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h4 className="font-semibold text-lg">{incident.title}</h4>
-                          <Badge variant={getSeverityBadgeVariant(incident.severity)}>
-                            {incident.severity.toUpperCase()}
-                          </Badge>
-                          <Badge variant={getStatusBadgeVariant(incident.status)}>
-                            {incident.status.replace("-", " ").toUpperCase()}
-                          </Badge>
+                {filteredIncidents.map((incident) => {
+                  const severityStatusMap: Record<string, "critical" | "warning" | "info" | "success"> = {
+                    critical: "critical",
+                    high: "warning",
+                    medium: "info",
+                    low: "success",
+                  };
+                  
+                  const statusMap: Record<string, "critical" | "warning" | "info" | "success"> = {
+                    new: "critical",
+                    "in-progress": "warning",
+                    investigating: "info",
+                    resolved: "success",
+                  };
+
+                  return (
+                    <div
+                      key={incident.id}
+                      className="border border-border rounded-lg p-4 hover:bg-accent/5 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <StatusDot 
+                              status={severityStatusMap[incident.severity] || "info"} 
+                              pulse={incident.severity === "critical"}
+                              size="lg"
+                            />
+                            <h4 className="font-semibold text-lg">{incident.title}</h4>
+                            <StatusBadge 
+                              status={severityStatusMap[incident.severity] || "info"}
+                              label={incident.severity}
+                              size="sm"
+                            />
+                            <StatusIndicator
+                              status={statusMap[incident.status] || "info"}
+                              label={incident.status.replace("-", " ")}
+                              size="sm"
+                              showIcon={false}
+                            />
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                            <span className="font-mono">{incident.id}</span>
+                            <span>•</span>
+                            <span>Assigned to: {incident.assignedTo}</span>
+                            <span>•</span>
+                            <span>Created: {incident.created}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                          <span>{incident.id}</span>
-                          <span>•</span>
-                          <span>Assigned to: {incident.assignedTo}</span>
-                          <span>•</span>
-                          <span>Created: {incident.created}</span>
+                        <div className="text-right">
+                          <div
+                            className="text-xl font-bold"
+                            style={{ color: getSeverityColor(incident.severity) }}
+                          >
+                            {incident.mttr}m
+                          </div>
+                          <div className="text-xs text-muted-foreground">MTTR</div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div
-                          className="text-xl font-bold"
-                          style={{ color: getSeverityColor(incident.severity) }}
-                        >
-                          {incident.mttr}m
+                      <p className="text-sm text-muted-foreground mb-3">{incident.description}</p>
+                      <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
+                        <div className="text-sm flex items-center gap-2">
+                          <span className="text-muted-foreground">Correlated Events:</span>
+                          <StatusIndicator 
+                            status="info" 
+                            count={incident.events}
+                            size="sm"
+                            showIcon={false}
+                          />
                         </div>
-                        <div className="text-xs text-muted-foreground">MTTR</div>
+                        <div className="text-sm text-right flex items-center justify-end gap-2">
+                          <span className="text-muted-foreground">Affected Systems:</span>
+                          <StatusIndicator 
+                            status={incident.affectedSystems > 5 ? "warning" : "info"}
+                            count={incident.affectedSystems}
+                            size="sm"
+                            showIcon={false}
+                          />
+                        </div>
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-3">{incident.description}</p>
-                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Correlated Events:</span>{" "}
-                        <span className="font-semibold">{incident.events}</span>
-                      </div>
-                      <div className="text-sm text-right">
-                        <span className="text-muted-foreground">Affected Systems:</span>{" "}
-                        <span className="font-semibold">{incident.affectedSystems}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
