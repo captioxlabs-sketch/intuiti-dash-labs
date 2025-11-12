@@ -4,6 +4,7 @@ export type WidgetSize = "small" | "medium" | "large";
 
 export interface WidgetConfig {
   id: string;
+  label: string;
   visible: boolean;
   size: WidgetSize;
   order: number;
@@ -14,33 +15,45 @@ export interface DashboardLayout {
   isDragEnabled: boolean;
 }
 
-const DEFAULT_WIDGETS: WidgetConfig[] = [
-  { id: "users", visible: true, size: "medium", order: 0 },
-  { id: "revenue", visible: true, size: "medium", order: 1 },
-  { id: "growth", visible: true, size: "medium", order: 2 },
-  { id: "sessions", visible: true, size: "medium", order: 3 },
-];
+export const useDashboardLayout = (
+  storageKey: string,
+  defaultWidgets: WidgetConfig[]
+) => {
+  const DEFAULT_LAYOUT: DashboardLayout = {
+    widgets: defaultWidgets,
+    isDragEnabled: false,
+  };
 
-const DEFAULT_LAYOUT: DashboardLayout = {
-  widgets: DEFAULT_WIDGETS,
-  isDragEnabled: true,
-};
-
-export const useDashboardLayout = (storageKey: string = "dashboard-layout") => {
   const [layout, setLayout] = useState<DashboardLayout>(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return DEFAULT_LAYOUT;
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Validate that the parsed data has the expected structure
+        if (parsed.widgets && Array.isArray(parsed.widgets)) {
+          // Merge saved layout with default widgets to handle new widgets
+          const savedWidgetIds = new Set(parsed.widgets.map((w: WidgetConfig) => w.id));
+          const newWidgets = defaultWidgets.filter(w => !savedWidgetIds.has(w.id));
+          
+          return {
+            widgets: [...parsed.widgets, ...newWidgets],
+            isDragEnabled: parsed.isDragEnabled ?? false,
+          };
+        }
       }
+    } catch (error) {
+      console.error('Failed to load dashboard layout:', error);
     }
     return DEFAULT_LAYOUT;
   });
 
+  // Save to localStorage whenever layout changes
   useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(layout));
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(layout));
+    } catch (error) {
+      console.error('Failed to save dashboard layout:', error);
+    }
   }, [layout, storageKey]);
 
   const updateWidget = (id: string, updates: Partial<WidgetConfig>) => {
@@ -79,6 +92,7 @@ export const useDashboardLayout = (storageKey: string = "dashboard-layout") => {
 
   const resetLayout = () => {
     setLayout(DEFAULT_LAYOUT);
+    localStorage.removeItem(storageKey);
   };
 
   const toggleDragEnabled = () => {
@@ -96,8 +110,14 @@ export const useDashboardLayout = (storageKey: string = "dashboard-layout") => {
     return [...layout.widgets].sort((a, b) => a.order - b.order);
   };
 
+  const isWidgetVisible = (id: string) => {
+    return getWidgetConfig(id)?.visible ?? true;
+  };
+
   return {
     layout,
+    widgets: layout.widgets,
+    isDragEnabled: layout.isDragEnabled,
     updateWidget,
     toggleVisibility,
     setSize,
@@ -106,5 +126,6 @@ export const useDashboardLayout = (storageKey: string = "dashboard-layout") => {
     toggleDragEnabled,
     getWidgetConfig,
     getSortedWidgets,
+    isWidgetVisible,
   };
 };

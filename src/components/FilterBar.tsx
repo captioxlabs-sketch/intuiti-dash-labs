@@ -39,6 +39,7 @@ interface FilterBarProps {
   onToggleWidgetVisibility?: (id: string) => void;
   onWidgetSizeChange?: (id: string, size: "small" | "medium" | "large") => void;
   onResetLayout?: () => void;
+  storageKey?: string;
 }
 
 export const FilterBar = ({
@@ -64,6 +65,7 @@ export const FilterBar = ({
   onToggleWidgetVisibility,
   onWidgetSizeChange,
   onResetLayout,
+  storageKey,
 }: FilterBarProps) => {
   return (
     <div className="space-y-4 animate-fade-in">
@@ -128,6 +130,7 @@ export const FilterBar = ({
               onReset={onResetLayout}
               isDragEnabled={isDragEnabled}
               onToggleDrag={onToggleDrag}
+              storageKey={storageKey}
             />
           )}
           

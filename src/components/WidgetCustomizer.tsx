@@ -1,4 +1,4 @@
-import { Settings2, Eye, EyeOff, Maximize2, Minimize2, Move } from "lucide-react";
+import { Settings2, Eye, EyeOff, Maximize2, Minimize2, Move, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { PersistenceIndicator } from "@/components/PersistenceIndicator";
 import {
   Select,
   SelectContent,
@@ -33,6 +34,7 @@ interface WidgetCustomizerProps {
   onReset?: () => void;
   isDragEnabled?: boolean;
   onToggleDrag?: () => void;
+  storageKey?: string;
 }
 
 export const WidgetCustomizer = ({
@@ -42,6 +44,7 @@ export const WidgetCustomizer = ({
   onReset,
   isDragEnabled = false,
   onToggleDrag,
+  storageKey = "dashboard-layout",
 }: WidgetCustomizerProps) => {
   return (
     <Sheet>
@@ -59,6 +62,11 @@ export const WidgetCustomizer = ({
           </SheetDescription>
         </SheetHeader>
         
+        <PersistenceIndicator 
+          storageKey={storageKey}
+          onReset={onReset}
+        />
+
         {onToggleDrag && (
           <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border">
             <div className="flex items-center justify-between">

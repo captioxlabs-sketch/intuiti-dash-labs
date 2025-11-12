@@ -8,6 +8,7 @@ import { DraggableDashboard } from "@/components/DraggableDashboard";
 import { DraggableWidget } from "@/components/DraggableWidget";
 import { SOCCharts } from "@/components/SOCCharts";
 import { Widget } from "@/components/WidgetCustomizer";
+import { useDashboardLayout } from "@/hooks/useDashboardLayout";
 import { useRealTimeData } from "@/hooks/useRealTimeData";
 import { useDataExport } from "@/hooks/useDataExport";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -156,6 +157,19 @@ const categoryFilters = [
   { value: "ddos", label: "DDoS" },
 ];
 
+const DEFAULT_SOC_WIDGETS: Widget[] = [
+  { id: "alerts", label: "Active Alerts", visible: true, size: "medium", order: 0 },
+  { id: "incidents", label: "Open Incidents", visible: true, size: "medium", order: 1 },
+  { id: "mttr", label: "Avg MTTR", visible: true, size: "medium", order: 2 },
+  { id: "efficiency", label: "Analyst Efficiency", visible: true, size: "medium", order: 3 },
+  { id: "alert-chart", label: "Alert Distribution", visible: true, size: "large", order: 4 },
+  { id: "incident-chart", label: "Incident Queue", visible: true, size: "large", order: 5 },
+  { id: "mttr-chart", label: "MTTR Trends", visible: true, size: "large", order: 6 },
+  { id: "correlation-chart", label: "Event Correlation", visible: true, size: "large", order: 7 },
+  { id: "analysts", label: "Analyst Workload", visible: true, size: "large", order: 8 },
+  { id: "queue", label: "Active Incident Queue", visible: true, size: "large", order: 9 },
+];
+
 const SOC = () => {
   const [dateRange, setDateRange] = useState({ from: new Date(2024, 0, 1), to: new Date() });
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -164,21 +178,19 @@ const SOC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isDragEnabled, setIsDragEnabled] = useState(false);
 
-  // Widget customization
-  const [widgets, setWidgets] = useState<Widget[]>([
-    { id: "alerts", label: "Active Alerts", visible: true, size: "medium", order: 0 },
-    { id: "incidents", label: "Open Incidents", visible: true, size: "medium", order: 1 },
-    { id: "mttr", label: "Avg MTTR", visible: true, size: "medium", order: 2 },
-    { id: "efficiency", label: "Analyst Efficiency", visible: true, size: "medium", order: 3 },
-    { id: "alert-chart", label: "Alert Distribution", visible: true, size: "large", order: 4 },
-    { id: "incident-chart", label: "Incident Queue", visible: true, size: "large", order: 5 },
-    { id: "mttr-chart", label: "MTTR Trends", visible: true, size: "large", order: 6 },
-    { id: "correlation-chart", label: "Event Correlation", visible: true, size: "large", order: 7 },
-    { id: "analysts", label: "Analyst Workload", visible: true, size: "large", order: 8 },
-    { id: "queue", label: "Incident Queue", visible: true, size: "large", order: 9 },
-  ]);
+  // Dashboard layout management with localStorage persistence
+  const {
+    widgets,
+    isDragEnabled,
+    toggleVisibility,
+    setSize,
+    reorderWidgets,
+    resetLayout,
+    toggleDragEnabled,
+    getSortedWidgets,
+    isWidgetVisible,
+  } = useDashboardLayout("soc-dashboard-layout", DEFAULT_SOC_WIDGETS);
 
   // Real-time data updates
   const { data: liveData, lastUpdate, isLive, toggleLive } = useRealTimeData(
@@ -212,42 +224,6 @@ const SOC = () => {
       },
     };
     exportData(exportDataset, format, "soc-dashboard");
-  };
-
-  const toggleWidgetVisibility = (id: string) => {
-    setWidgets((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, visible: !w.visible } : w))
-    );
-  };
-
-  const changeWidgetSize = (id: string, size: "small" | "medium" | "large") => {
-    setWidgets((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, size } : w))
-    );
-  };
-
-  const resetLayout = () => {
-    setWidgets([
-      { id: "alerts", label: "Active Alerts", visible: true, size: "medium", order: 0 },
-      { id: "incidents", label: "Open Incidents", visible: true, size: "medium", order: 1 },
-      { id: "mttr", label: "Avg MTTR", visible: true, size: "medium", order: 2 },
-      { id: "efficiency", label: "Analyst Efficiency", visible: true, size: "medium", order: 3 },
-      { id: "alert-chart", label: "Alert Distribution", visible: true, size: "large", order: 4 },
-      { id: "incident-chart", label: "Incident Queue", visible: true, size: "large", order: 5 },
-      { id: "mttr-chart", label: "MTTR Trends", visible: true, size: "large", order: 6 },
-      { id: "correlation-chart", label: "Event Correlation", visible: true, size: "large", order: 7 },
-      { id: "analysts", label: "Analyst Workload", visible: true, size: "large", order: 8 },
-      { id: "queue", label: "Incident Queue", visible: true, size: "large", order: 9 },
-    ]);
-  };
-
-  const reorderWidgets = (oldIndex: number, newIndex: number) => {
-    setWidgets((prev) => {
-      const newWidgets = [...prev];
-      const [movedWidget] = newWidgets.splice(oldIndex, 1);
-      newWidgets.splice(newIndex, 0, movedWidget);
-      return newWidgets.map((w, idx) => ({ ...w, order: idx }));
-    });
   };
 
   const handleCardClick = (cardId: string) => {
@@ -324,11 +300,7 @@ const SOC = () => {
   };
 
   const getWidget = (id: string) => widgets.find((w) => w.id === id);
-  const isWidgetVisible = (id: string) => getWidget(id)?.visible ?? true;
-  const sortedWidgets = useMemo(() => 
-    [...widgets].sort((a, b) => a.order - b.order),
-    [widgets]
-  );
+  const sortedWidgets = useMemo(() => getSortedWidgets(), [widgets]);
   const visibleWidgetIds = sortedWidgets.filter(w => w.visible).map(w => w.id);
 
   if (isLoading) {
@@ -372,11 +344,12 @@ const SOC = () => {
           lastUpdate={lastUpdate}
           onToggleLive={toggleLive}
           widgets={widgets}
-          onToggleWidgetVisibility={toggleWidgetVisibility}
-          onWidgetSizeChange={changeWidgetSize}
+          onToggleWidgetVisibility={toggleVisibility}
+          onWidgetSizeChange={setSize}
           onResetLayout={resetLayout}
           isDragEnabled={isDragEnabled}
-          onToggleDrag={() => setIsDragEnabled(!isDragEnabled)}
+          onToggleDrag={toggleDragEnabled}
+          storageKey="soc-dashboard-layout"
         />
 
         <DraggableDashboard

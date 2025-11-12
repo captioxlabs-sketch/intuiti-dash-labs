@@ -16,6 +16,13 @@ const metrics = [
   { value: "scanned", label: "Scanned Only" },
 ];
 
+const DEFAULT_OVERVIEW_WIDGETS = [
+  { id: "threats", label: "Active Threats", visible: true, size: "medium" as const, order: 0 },
+  { id: "blocked", label: "Blocked Attacks", visible: true, size: "medium" as const, order: 1 },
+  { id: "scanned", label: "Assets Scanned", visible: true, size: "medium" as const, order: 2 },
+  { id: "compliance", label: "Compliance Score", visible: true, size: "medium" as const, order: 3 },
+];
+
 const Overview = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 30),
@@ -31,7 +38,7 @@ const Overview = () => {
     setSize,
     reorderWidgets,
     resetLayout,
-  } = useDashboardLayout("overview-layout");
+  } = useDashboardLayout("overview-layout", DEFAULT_OVERVIEW_WIDGETS);
 
   const handleReset = () => {
     setDateRange({
