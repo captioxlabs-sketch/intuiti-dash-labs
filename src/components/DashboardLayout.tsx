@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Home, BarChart3, Shield, FolderKanban, Flame, Laptop, HardDrive, Database, Timer, Activity, Radio } from "lucide-react";
+import { Home, BarChart3, Shield, FolderKanban, Flame, Laptop, HardDrive, Database, Timer, Activity, Radio, Bug } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 
 interface DashboardLayoutProps {
@@ -11,6 +11,7 @@ const navigation = [
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "SOC", href: "/soc", icon: Radio },
   { name: "Threats", href: "/threats", icon: Shield },
+  { name: "Vulnerabilities", href: "/vulnerabilities", icon: Bug },
   { name: "Firewall", href: "/firewall", icon: Flame },
   { name: "Endpoints", href: "/endpoints", icon: Laptop },
   { name: "Assets", href: "/assets", icon: HardDrive },
