@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard } from "@/components/MetricCard";
+import { ComparisonMetricCard } from "@/components/ComparisonMetricCard";
 import { FilterBar } from "@/components/FilterBar";
 import { DrillDownModal } from "@/components/DrillDownModal";
 import { LoadingState } from "@/components/LoadingState";
@@ -11,6 +12,7 @@ import { Widget } from "@/components/WidgetCustomizer";
 import { useDashboardLayout } from "@/hooks/useDashboardLayout";
 import { useRealTimeData } from "@/hooks/useRealTimeData";
 import { useDataExport } from "@/hooks/useDataExport";
+import { useComparisonMode } from "@/hooks/useComparisonMode";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -171,13 +173,23 @@ const DEFAULT_SOC_WIDGETS: Widget[] = [
 ];
 
 const SOC = () => {
-  const [dateRange, setDateRange] = useState({ from: new Date(2024, 0, 1), to: new Date() });
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [drillDownData, setDrillDownData] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Comparison mode
+  const {
+    isComparisonMode,
+    toggleComparisonMode,
+    primaryDateRange,
+    setPrimaryDateRange,
+    comparisonDateRange,
+    setComparisonDateRange,
+    createComparisonData,
+  } = useComparisonMode();
 
   // Dashboard layout management with localStorage persistence
   const {
@@ -192,7 +204,7 @@ const SOC = () => {
     isWidgetVisible,
   } = useDashboardLayout("soc-dashboard-layout", DEFAULT_SOC_WIDGETS);
 
-  // Real-time data updates
+  // Real-time data updates for current period
   const { data: liveData, lastUpdate, isLive, toggleLive } = useRealTimeData(
     { alertCount: 152, incidentCount: 45 },
     (prev) => ({
@@ -202,11 +214,19 @@ const SOC = () => {
     { refreshInterval: 8000 }
   );
 
+  // Simulated comparison period data (in real app, fetch from API)
+  const comparisonData = useMemo(() => ({
+    alertCount: 128,
+    incidentCount: 52,
+    avgMTTR: 32,
+  }), []);
+
   // Export functionality
   const { exportData } = useDataExport();
 
   const handleReset = () => {
-    setDateRange({ from: new Date(2024, 0, 1), to: new Date() });
+    setPrimaryDateRange({ from: new Date(2024, 0, 1), to: new Date() });
+    setComparisonDateRange({ from: new Date(2023, 0, 1), to: new Date(2023, 11, 31) });
     setSelectedCategory("all");
     setSelectedCard(null);
     setSearchValue("");
@@ -245,11 +265,37 @@ const SOC = () => {
   };
 
   const getMetricMultiplier = () => {
-    const days = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24));
+    if (!primaryDateRange?.from || !primaryDateRange?.to) return 1;
+    const days = Math.ceil((primaryDateRange.to.getTime() - primaryDateRange.from.getTime()) / (1000 * 60 * 60 * 24));
     return Math.max(0.5, Math.min(2, days / 180));
   };
 
   const multiplier = getMetricMultiplier();
+
+  // Prepare comparison metric data
+  const alertComparison = useMemo(() => 
+    createComparisonData(
+      Math.round(liveData.alertCount * multiplier),
+      comparisonData.alertCount
+    ),
+    [liveData.alertCount, multiplier, comparisonData.alertCount, createComparisonData]
+  );
+
+  const incidentComparison = useMemo(() =>
+    createComparisonData(
+      Math.round(liveData.incidentCount * multiplier),
+      comparisonData.incidentCount
+    ),
+    [liveData.incidentCount, multiplier, comparisonData.incidentCount, createComparisonData]
+  );
+
+  const mttrComparison = useMemo(() =>
+    createComparisonData(
+      Math.round(24 * multiplier),
+      comparisonData.avgMTTR
+    ),
+    [multiplier, comparisonData.avgMTTR, createComparisonData]
+  );
 
   const filteredIncidents = useMemo(() => {
     let results = activeIncidents;
@@ -326,12 +372,8 @@ const SOC = () => {
         </div>
 
         <FilterBar
-          dateRange={dateRange}
-          onDateRangeChange={(range) => {
-            if (range?.from && range?.to) {
-              setDateRange({ from: range.from, to: range.to });
-            }
-          }}
+          dateRange={primaryDateRange}
+          onDateRangeChange={setPrimaryDateRange}
           selectedCategory={selectedCategory}
           onCategoryChange={setSelectedCategory}
           categories={categoryFilters}
@@ -350,6 +392,10 @@ const SOC = () => {
           isDragEnabled={isDragEnabled}
           onToggleDrag={toggleDragEnabled}
           storageKey="soc-dashboard-layout"
+          isComparisonMode={isComparisonMode}
+          onToggleComparisonMode={toggleComparisonMode}
+          comparisonDateRange={comparisonDateRange}
+          onComparisonDateRangeChange={setComparisonDateRange}
         />
 
         <DraggableDashboard
@@ -369,7 +415,17 @@ const SOC = () => {
                     
                     switch (widget.id) {
                       case "alerts":
-                        return (
+                        return isComparisonMode ? (
+                          <ComparisonMetricCard
+                            key="alerts"
+                            title="Active Alerts"
+                            data={alertComparison}
+                            icon={Bell}
+                            iconColor="text-destructive"
+                            onClick={() => handleCardClick("alerts")}
+                            isSelected={selectedCard === "alerts"}
+                          />
+                        ) : (
                           <MetricCard
                             key="alerts"
                             title="Active Alerts"
@@ -383,7 +439,17 @@ const SOC = () => {
                           />
                         );
                       case "incidents":
-                        return (
+                        return isComparisonMode ? (
+                          <ComparisonMetricCard
+                            key="incidents"
+                            title="Open Incidents"
+                            data={incidentComparison}
+                            icon={AlertTriangle}
+                            iconColor="text-accent"
+                            onClick={() => handleCardClick("incidents")}
+                            isSelected={selectedCard === "incidents"}
+                          />
+                        ) : (
                           <MetricCard
                             key="incidents"
                             title="Open Incidents"
@@ -397,7 +463,18 @@ const SOC = () => {
                           />
                         );
                       case "mttr":
-                        return (
+                        return isComparisonMode ? (
+                          <ComparisonMetricCard
+                            key="mttr"
+                            title="Avg MTTR"
+                            data={mttrComparison}
+                            icon={Clock}
+                            iconColor="text-primary"
+                            onClick={() => handleCardClick("mttr")}
+                            isSelected={selectedCard === "mttr"}
+                            format={(value) => `${value}m`}
+                          />
+                        ) : (
                           <MetricCard
                             key="mttr"
                             title="Avg MTTR"

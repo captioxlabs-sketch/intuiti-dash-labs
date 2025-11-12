@@ -13,7 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { RotateCcw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { RotateCcw, GitCompare } from "lucide-react";
 
 interface FilterBarProps {
   dateRange: DateRange | undefined;
@@ -40,6 +41,11 @@ interface FilterBarProps {
   onWidgetSizeChange?: (id: string, size: "small" | "medium" | "large") => void;
   onResetLayout?: () => void;
   storageKey?: string;
+  // Comparison mode
+  isComparisonMode?: boolean;
+  onToggleComparisonMode?: () => void;
+  comparisonDateRange?: DateRange | undefined;
+  onComparisonDateRangeChange?: (range: DateRange | undefined) => void;
 }
 
 export const FilterBar = ({
@@ -66,11 +72,31 @@ export const FilterBar = ({
   onWidgetSizeChange,
   onResetLayout,
   storageKey,
+  isComparisonMode,
+  onToggleComparisonMode,
+  comparisonDateRange,
+  onComparisonDateRangeChange,
 }: FilterBarProps) => {
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex flex-wrap gap-4 items-center p-4 bg-card border border-border rounded-lg">
-        <DateRangePicker date={dateRange} onDateChange={onDateRangeChange} />
+        {/* Date Range Pickers */}
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-1">
+            {isComparisonMode && <div className="text-xs font-medium text-muted-foreground px-1">Current Period</div>}
+            <DateRangePicker date={dateRange} onDateChange={onDateRangeChange} />
+          </div>
+          
+          {isComparisonMode && comparisonDateRange !== undefined && onComparisonDateRangeChange && (
+            <div className="flex flex-col gap-1">
+              <div className="text-xs font-medium text-muted-foreground px-1">Comparison Period</div>
+              <DateRangePicker 
+                date={comparisonDateRange} 
+                onDateChange={onComparisonDateRangeChange}
+              />
+            </div>
+          )}
+        </div>
         
         {metrics && onMetricChange && (
           <Select value={selectedMetric} onValueChange={onMetricChange}>
@@ -112,6 +138,19 @@ export const FilterBar = ({
         )}
 
         <div className="ml-auto flex items-center gap-2">
+          {isComparisonMode !== undefined && onToggleComparisonMode && (
+            <Button
+              variant={isComparisonMode ? "default" : "outline"}
+              size="sm"
+              onClick={onToggleComparisonMode}
+              className="gap-2"
+            >
+              <GitCompare className="h-4 w-4" />
+              Compare
+              {isComparisonMode && <Badge variant="secondary" className="ml-1">ON</Badge>}
+            </Button>
+          )}
+          
           {isLive !== undefined && onToggleLive && (
             <LiveIndicator
               isLive={isLive}
