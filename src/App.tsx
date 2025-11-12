@@ -15,6 +15,7 @@ import Lifecycle from "./pages/Lifecycle";
 import AssetHealth from "./pages/AssetHealth";
 import SOC from "./pages/SOC";
 import VulnerabilityManagement from "./pages/VulnerabilityManagement";
+import NetworkMonitoring from "./pages/NetworkMonitoring";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/asset-health" element={<AssetHealth />} />
           <Route path="/soc" element={<SOC />} />
           <Route path="/vulnerabilities" element={<VulnerabilityManagement />} />
+          <Route path="/network" element={<NetworkMonitoring />} />
           <Route path="/projects" element={<Projects />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
