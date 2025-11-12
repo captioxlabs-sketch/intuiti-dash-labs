@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { DraggableWidget } from "./DraggableWidget";
 import { HeatmapChart, HeatmapDataPoint } from "./HeatmapChart";
 import { StatusIndicator, StatusBadge, StatusDot } from "./StatusIndicator";
+import { ChartTooltip, SimpleTooltip } from "./ChartTooltip";
 import {
   Shield,
   AlertTriangle,
@@ -92,45 +93,52 @@ export const SOCCharts = ({
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="hour" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
+                  <Tooltip 
+                    content={
+                      <ChartTooltip 
+                        title="Alert Distribution"
+                        accentColor="pink"
+                        showStatus
+                        statusThresholds={{ critical: 20, warning: 15, success: 0 }}
+                      />
+                    }
                   />
                   <Legend />
                   <Area
                     type="monotone"
                     dataKey="critical"
                     stackId="1"
-                    stroke="hsl(var(--destructive))"
-                    fill="hsl(var(--destructive))"
+                    stroke="hsl(var(--neon-pink))"
+                    fill="hsl(var(--neon-pink))"
                     fillOpacity={0.6}
+                    name="Critical"
                   />
                   <Area
                     type="monotone"
                     dataKey="high"
                     stackId="1"
-                    stroke="hsl(48, 96%, 53%)"
-                    fill="hsl(48, 96%, 53%)"
+                    stroke="hsl(var(--neon-yellow))"
+                    fill="hsl(var(--neon-yellow))"
                     fillOpacity={0.6}
+                    name="High"
                   />
                   <Area
                     type="monotone"
                     dataKey="medium"
                     stackId="1"
-                    stroke="hsl(var(--primary))"
-                    fill="hsl(var(--primary))"
+                    stroke="hsl(var(--neon-cyan))"
+                    fill="hsl(var(--neon-cyan))"
                     fillOpacity={0.6}
+                    name="Medium"
                   />
                   <Area
                     type="monotone"
                     dataKey="low"
                     stackId="1"
-                    stroke="hsl(var(--accent))"
-                    fill="hsl(var(--accent))"
+                    stroke="hsl(var(--neon-green))"
+                    fill="hsl(var(--neon-green))"
                     fillOpacity={0.6}
+                    name="Low"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -157,16 +165,19 @@ export const SOCCharts = ({
                   <XAxis dataKey="status" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
+                    content={
+                      <ChartTooltip 
+                        title="Incident Queue"
+                        accentColor="purple"
+                        valueFormatter={(v) => `${v} incidents`}
+                      />
+                    }
                   />
                   <Bar
                     dataKey="count"
                     onClick={(data) => handleChartClick(data, "Incident Status")}
                     cursor="pointer"
+                    name="Incidents"
                   >
                     {incidentsByStatus.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -197,27 +208,34 @@ export const SOCCharts = ({
                   <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
+                    content={
+                      <ChartTooltip 
+                        title="MTTR Performance"
+                        accentColor="blue"
+                        valueFormatter={(v) => `${v} min`}
+                        showStatus
+                        statusThresholds={{ critical: 30, warning: 25, success: 0 }}
+                      />
+                    }
                   />
                   <Legend />
                   <Line
                     type="monotone"
                     dataKey="mttr"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    name="Actual MTTR (min)"
+                    stroke="hsl(var(--neon-cyan))"
+                    strokeWidth={3}
+                    name="Actual MTTR"
+                    dot={{ fill: "hsl(var(--neon-cyan))", r: 4 }}
+                    activeDot={{ r: 6 }}
                   />
                   <Line
                     type="monotone"
                     dataKey="target"
-                    stroke="hsl(var(--accent))"
+                    stroke="hsl(var(--neon-green))"
                     strokeWidth={2}
                     strokeDasharray="5 5"
-                    name="Target MTTR (min)"
+                    name="Target MTTR"
+                    dot={{ fill: "hsl(var(--neon-green))", r: 3 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -255,17 +273,20 @@ export const SOCCharts = ({
                   />
                   <Tooltip
                     cursor={{ strokeDasharray: "3 3" }}
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
+                    content={
+                      <ChartTooltip 
+                        title="Event Correlation"
+                        accentColor="green"
+                        showStatus
+                        statusThresholds={{ critical: 85, warning: 70, success: 0 }}
+                      />
+                    }
                   />
                   <Legend />
                   <Scatter
                     name="Security Events"
                     data={eventCorrelation}
-                    fill="hsl(var(--primary))"
+                    fill="hsl(var(--neon-purple))"
                     onClick={(data) => handleChartClick(data, "Event Correlation")}
                   />
                 </ScatterChart>
