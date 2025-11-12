@@ -1,8 +1,40 @@
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard } from "@/components/MetricCard";
+import { FilterBar } from "@/components/FilterBar";
+import { DateRange } from "react-day-picker";
 import { Users, DollarSign, TrendingUp, Activity } from "lucide-react";
+import { addDays, subDays } from "date-fns";
+
+const metrics = [
+  { value: "all", label: "All Metrics" },
+  { value: "users", label: "Users Only" },
+  { value: "revenue", label: "Revenue Only" },
+  { value: "growth", label: "Growth Only" },
+];
 
 const Overview = () => {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
+  const [selectedMetric, setSelectedMetric] = useState("all");
+
+  const handleReset = () => {
+    setDateRange({
+      from: subDays(new Date(), 30),
+      to: new Date(),
+    });
+    setSelectedMetric("all");
+  };
+
+  const getMetricMultiplier = () => {
+    if (!dateRange?.from || !dateRange?.to) return 1;
+    const days = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0.5, Math.min(1.5, days / 30));
+  };
+
+  const multiplier = getMetricMultiplier();
   return (
     <DashboardLayout>
       <div className="p-8">
@@ -15,34 +47,49 @@ const Overview = () => {
           </p>
         </div>
 
+        <FilterBar
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          selectedMetric={selectedMetric}
+          onMetricChange={setSelectedMetric}
+          metrics={metrics}
+          onReset={handleReset}
+        />
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          <MetricCard
-            title="Total Users"
-            value="12,345"
-            change="+12.5% from last month"
-            changeType="positive"
-            icon={Users}
-            iconColor="text-chart-1"
-          />
-          <MetricCard
-            title="Revenue"
-            value="$45,678"
-            change="+8.2% from last month"
-            changeType="positive"
-            icon={DollarSign}
-            iconColor="text-chart-2"
-          />
-          <MetricCard
-            title="Growth Rate"
-            value="23.5%"
-            change="+3.1% from last month"
-            changeType="positive"
-            icon={TrendingUp}
-            iconColor="text-chart-3"
-          />
+          {(selectedMetric === "all" || selectedMetric === "users") && (
+            <MetricCard
+              title="Total Users"
+              value={Math.round(12345 * multiplier).toLocaleString()}
+              change={`+${(12.5 * multiplier).toFixed(1)}% from last period`}
+              changeType="positive"
+              icon={Users}
+              iconColor="text-chart-1"
+            />
+          )}
+          {(selectedMetric === "all" || selectedMetric === "revenue") && (
+            <MetricCard
+              title="Revenue"
+              value={`$${Math.round(45678 * multiplier).toLocaleString()}`}
+              change={`+${(8.2 * multiplier).toFixed(1)}% from last period`}
+              changeType="positive"
+              icon={DollarSign}
+              iconColor="text-chart-2"
+            />
+          )}
+          {(selectedMetric === "all" || selectedMetric === "growth") && (
+            <MetricCard
+              title="Growth Rate"
+              value={`${(23.5 * multiplier).toFixed(1)}%`}
+              change={`+${(3.1 * multiplier).toFixed(1)}% from last period`}
+              changeType="positive"
+              icon={TrendingUp}
+              iconColor="text-chart-3"
+            />
+          )}
           <MetricCard
             title="Active Sessions"
-            value="892"
+            value={Math.round(892 * multiplier).toString()}
             change="Live tracking"
             changeType="neutral"
             icon={Activity}

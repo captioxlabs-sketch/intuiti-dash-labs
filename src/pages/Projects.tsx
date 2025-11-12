@@ -1,8 +1,12 @@
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard } from "@/components/MetricCard";
+import { FilterBar } from "@/components/FilterBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateRange } from "react-day-picker";
 import { CheckCircle2, Clock, AlertCircle, FolderKanban } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { addDays, subDays } from "date-fns";
 import {
   BarChart,
   Bar,
@@ -28,7 +32,42 @@ const projects = [
   { name: "Marketing Campaign", progress: 95, status: "In Progress", team: 6 },
 ];
 
+const statusCategories = [
+  { value: "all", label: "All Projects" },
+  { value: "completed", label: "Completed" },
+  { value: "in-progress", label: "In Progress" },
+  { value: "planned", label: "Planned" },
+];
+
 const Projects = () => {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 90),
+    to: new Date(),
+  });
+  const [selectedStatus, setSelectedStatus] = useState("all");
+
+  const handleReset = () => {
+    setDateRange({
+      from: subDays(new Date(), 90),
+      to: new Date(),
+    });
+    setSelectedStatus("all");
+  };
+
+  const filteredProjects = useMemo(() => {
+    if (selectedStatus === "all") return projects;
+    return projects.filter(
+      (project) => project.status.toLowerCase().replace(" ", "-") === selectedStatus
+    );
+  }, [selectedStatus]);
+
+  const getMetricMultiplier = () => {
+    if (!dateRange?.from || !dateRange?.to) return 1;
+    const days = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0.5, Math.min(1.5, days / 90));
+  };
+
+  const multiplier = getMetricMultiplier();
   return (
     <DashboardLayout>
       <div className="p-8">
@@ -41,26 +80,35 @@ const Projects = () => {
           </p>
         </div>
 
+        <FilterBar
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          selectedCategory={selectedStatus}
+          onCategoryChange={setSelectedStatus}
+          categories={statusCategories}
+          onReset={handleReset}
+        />
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
           <MetricCard
             title="Active Projects"
-            value="18"
-            change="3 new this week"
+            value={Math.round(18 * multiplier).toString()}
+            change={`${Math.round(3 * multiplier)} new this period`}
             changeType="positive"
             icon={FolderKanban}
             iconColor="text-chart-1"
           />
           <MetricCard
             title="Completed"
-            value="24"
-            change="+4 this month"
+            value={Math.round(24 * multiplier).toString()}
+            change={`+${Math.round(4 * multiplier)} this period`}
             changeType="positive"
             icon={CheckCircle2}
             iconColor="text-chart-2"
           />
           <MetricCard
             title="In Progress"
-            value="12"
+            value={Math.round(12 * multiplier).toString()}
             change="On track"
             changeType="neutral"
             icon={Clock}
@@ -106,7 +154,7 @@ const Projects = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {projects.map((project, index) => (
+                {filteredProjects.map((project, index) => (
                   <div key={index} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div>

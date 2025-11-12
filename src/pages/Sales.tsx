@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard } from "@/components/MetricCard";
+import { FilterBar } from "@/components/FilterBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateRange } from "react-day-picker";
 import { DollarSign, ShoppingCart, TrendingUp, Package } from "lucide-react";
+import { addDays, subDays } from "date-fns";
 import {
   AreaChart,
   Area,
@@ -33,7 +37,35 @@ const productData = [
   { category: "Books", sales: 3200 },
 ];
 
+const metrics = [
+  { value: "all", label: "All Metrics" },
+  { value: "revenue", label: "Revenue" },
+  { value: "orders", label: "Orders" },
+  { value: "products", label: "Products" },
+];
+
 const Sales = () => {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 180),
+    to: new Date(),
+  });
+  const [selectedMetric, setSelectedMetric] = useState("all");
+
+  const handleReset = () => {
+    setDateRange({
+      from: subDays(new Date(), 180),
+      to: new Date(),
+    });
+    setSelectedMetric("all");
+  };
+
+  const getMetricMultiplier = () => {
+    if (!dateRange?.from || !dateRange?.to) return 1;
+    const days = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0.3, Math.min(2, days / 180));
+  };
+
+  const multiplier = getMetricMultiplier();
   return (
     <DashboardLayout>
       <div className="p-8">
@@ -44,39 +76,54 @@ const Sales = () => {
           </p>
         </div>
 
+        <FilterBar
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          selectedMetric={selectedMetric}
+          onMetricChange={setSelectedMetric}
+          metrics={metrics}
+          onReset={handleReset}
+        />
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          <MetricCard
-            title="Total Revenue"
-            value="$121K"
-            change="+24.5% from last month"
-            changeType="positive"
-            icon={DollarSign}
-            iconColor="text-chart-2"
-          />
-          <MetricCard
-            title="Orders"
-            value="1,392"
-            change="+12.3% from last month"
-            changeType="positive"
-            icon={ShoppingCart}
-            iconColor="text-chart-1"
-          />
+          {(selectedMetric === "all" || selectedMetric === "revenue") && (
+            <MetricCard
+              title="Total Revenue"
+              value={`$${Math.round(121 * multiplier)}K`}
+              change={`+${(24.5 * multiplier).toFixed(1)}% from last period`}
+              changeType="positive"
+              icon={DollarSign}
+              iconColor="text-chart-2"
+            />
+          )}
+          {(selectedMetric === "all" || selectedMetric === "orders") && (
+            <MetricCard
+              title="Orders"
+              value={Math.round(1392 * multiplier).toLocaleString()}
+              change={`+${(12.3 * multiplier).toFixed(1)}% from last period`}
+              changeType="positive"
+              icon={ShoppingCart}
+              iconColor="text-chart-1"
+            />
+          )}
           <MetricCard
             title="Conversion Rate"
-            value="3.2%"
-            change="+0.8% from last month"
+            value={`${(3.2 * multiplier).toFixed(1)}%`}
+            change={`+${(0.8 * multiplier).toFixed(1)}% from last period`}
             changeType="positive"
             icon={TrendingUp}
             iconColor="text-chart-3"
           />
-          <MetricCard
-            title="Products Sold"
-            value="8,456"
-            change="+18.9% from last month"
-            changeType="positive"
-            icon={Package}
-            iconColor="text-chart-4"
-          />
+          {(selectedMetric === "all" || selectedMetric === "products") && (
+            <MetricCard
+              title="Products Sold"
+              value={Math.round(8456 * multiplier).toLocaleString()}
+              change={`+${(18.9 * multiplier).toFixed(1)}% from last period`}
+              changeType="positive"
+              icon={Package}
+              iconColor="text-chart-4"
+            />
+          )}
         </div>
 
         <div className="grid gap-6 mb-6">

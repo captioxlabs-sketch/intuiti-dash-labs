@@ -1,7 +1,11 @@
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard } from "@/components/MetricCard";
+import { FilterBar } from "@/components/FilterBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateRange } from "react-day-picker";
 import { Eye, MousePointer, Clock, Users } from "lucide-react";
+import { addDays, subDays } from "date-fns";
 import {
   LineChart,
   Line,
@@ -42,7 +46,42 @@ const COLORS = [
   "hsl(var(--chart-4))",
 ];
 
+const categories = [
+  { value: "all", label: "All Sources" },
+  { value: "direct", label: "Direct" },
+  { value: "organic", label: "Organic" },
+  { value: "social", label: "Social" },
+];
+
 const Analytics = () => {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 180),
+    to: new Date(),
+  });
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  const handleReset = () => {
+    setDateRange({
+      from: subDays(new Date(), 180),
+      to: new Date(),
+    });
+    setSelectedCategory("all");
+  };
+
+  const filteredTrafficData = useMemo(() => {
+    if (selectedCategory === "all") return trafficSourceData;
+    return trafficSourceData.filter(
+      (item) => item.name.toLowerCase() === selectedCategory
+    );
+  }, [selectedCategory]);
+
+  const getMetricMultiplier = () => {
+    if (!dateRange?.from || !dateRange?.to) return 1;
+    const days = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0.3, Math.min(2, days / 180));
+  };
+
+  const multiplier = getMetricMultiplier();
   return (
     <DashboardLayout>
       <div className="p-8">
@@ -56,32 +95,32 @@ const Analytics = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
           <MetricCard
             title="Page Views"
-            value="45.2K"
-            change="+20.1% from last month"
+            value={`${(45.2 * multiplier).toFixed(1)}K`}
+            change={`+${(20.1 * multiplier).toFixed(1)}% from last period`}
             changeType="positive"
             icon={Eye}
             iconColor="text-chart-1"
           />
           <MetricCard
             title="Avg. Session"
-            value="3m 24s"
-            change="+5.4% from last month"
+            value={`${Math.floor(3 * multiplier)}m ${Math.floor(24 * multiplier)}s`}
+            change={`+${(5.4 * multiplier).toFixed(1)}% from last period`}
             changeType="positive"
             icon={Clock}
             iconColor="text-chart-2"
           />
           <MetricCard
             title="Click Rate"
-            value="12.8%"
-            change="+2.3% from last month"
+            value={`${(12.8 * multiplier).toFixed(1)}%`}
+            change={`+${(2.3 * multiplier).toFixed(1)}% from last period`}
             changeType="positive"
             icon={MousePointer}
             iconColor="text-chart-3"
           />
           <MetricCard
             title="Active Users"
-            value="8,234"
-            change="+18.2% from last month"
+            value={Math.round(8234 * multiplier).toLocaleString()}
+            change={`+${(18.2 * multiplier).toFixed(1)}% from last period`}
             changeType="positive"
             icon={Users}
             iconColor="text-chart-4"
@@ -164,7 +203,7 @@ const Analytics = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={trafficSourceData}
+                    data={filteredTrafficData}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -173,7 +212,7 @@ const Analytics = () => {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {trafficSourceData.map((entry, index) => (
+                    {filteredTrafficData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
