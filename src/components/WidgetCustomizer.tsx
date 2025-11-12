@@ -1,4 +1,4 @@
-import { Settings2, Eye, EyeOff, Maximize2, Minimize2 } from "lucide-react";
+import { Settings2, Eye, EyeOff, Maximize2, Minimize2, Move } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -23,6 +23,7 @@ export interface Widget {
   label: string;
   visible: boolean;
   size: "small" | "medium" | "large";
+  order: number;
 }
 
 interface WidgetCustomizerProps {
@@ -30,6 +31,8 @@ interface WidgetCustomizerProps {
   onToggleVisibility: (id: string) => void;
   onSizeChange: (id: string, size: "small" | "medium" | "large") => void;
   onReset?: () => void;
+  isDragEnabled?: boolean;
+  onToggleDrag?: () => void;
 }
 
 export const WidgetCustomizer = ({
@@ -37,6 +40,8 @@ export const WidgetCustomizer = ({
   onToggleVisibility,
   onSizeChange,
   onReset,
+  isDragEnabled = false,
+  onToggleDrag,
 }: WidgetCustomizerProps) => {
   return (
     <Sheet>
@@ -54,6 +59,26 @@ export const WidgetCustomizer = ({
           </SheetDescription>
         </SheetHeader>
         
+        {onToggleDrag && (
+          <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Move className="h-4 w-4 text-primary" />
+                <div>
+                  <Label className="text-base font-medium">Drag & Drop</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {isDragEnabled ? "Drag widgets to reorder them" : "Enable to reorder widgets"}
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={isDragEnabled}
+                onCheckedChange={onToggleDrag}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="mt-6 space-y-6">
           {widgets.map((widget) => (
             <div key={widget.id} className="space-y-3 pb-4 border-b border-border last:border-0">

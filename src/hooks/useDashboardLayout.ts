@@ -11,6 +11,7 @@ export interface WidgetConfig {
 
 export interface DashboardLayout {
   widgets: WidgetConfig[];
+  isDragEnabled: boolean;
 }
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
@@ -20,6 +21,11 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "sessions", visible: true, size: "medium", order: 3 },
 ];
 
+const DEFAULT_LAYOUT: DashboardLayout = {
+  widgets: DEFAULT_WIDGETS,
+  isDragEnabled: true,
+};
+
 export const useDashboardLayout = (storageKey: string = "dashboard-layout") => {
   const [layout, setLayout] = useState<DashboardLayout>(() => {
     const saved = localStorage.getItem(storageKey);
@@ -27,10 +33,10 @@ export const useDashboardLayout = (storageKey: string = "dashboard-layout") => {
       try {
         return JSON.parse(saved);
       } catch {
-        return { widgets: DEFAULT_WIDGETS };
+        return DEFAULT_LAYOUT;
       }
     }
-    return { widgets: DEFAULT_WIDGETS };
+    return DEFAULT_LAYOUT;
   });
 
   useEffect(() => {
@@ -72,7 +78,14 @@ export const useDashboardLayout = (storageKey: string = "dashboard-layout") => {
   };
 
   const resetLayout = () => {
-    setLayout({ widgets: DEFAULT_WIDGETS });
+    setLayout(DEFAULT_LAYOUT);
+  };
+
+  const toggleDragEnabled = () => {
+    setLayout((prev) => ({
+      ...prev,
+      isDragEnabled: !prev.isDragEnabled,
+    }));
   };
 
   const getWidgetConfig = (id: string) => {
@@ -90,6 +103,7 @@ export const useDashboardLayout = (storageKey: string = "dashboard-layout") => {
     setSize,
     reorderWidgets,
     resetLayout,
+    toggleDragEnabled,
     getWidgetConfig,
     getSortedWidgets,
   };

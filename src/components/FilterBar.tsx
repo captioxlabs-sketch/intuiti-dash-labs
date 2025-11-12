@@ -33,6 +33,8 @@ interface FilterBarProps {
   isLive?: boolean;
   lastUpdate?: Date;
   onToggleLive?: () => void;
+  isDragEnabled?: boolean;
+  onToggleDrag?: () => void;
   widgets?: Widget[];
   onToggleWidgetVisibility?: (id: string) => void;
   onWidgetSizeChange?: (id: string, size: "small" | "medium" | "large") => void;
@@ -56,6 +58,8 @@ export const FilterBar = ({
   isLive,
   lastUpdate,
   onToggleLive,
+  isDragEnabled,
+  onToggleDrag,
   widgets,
   onToggleWidgetVisibility,
   onWidgetSizeChange,
@@ -122,6 +126,8 @@ export const FilterBar = ({
               onToggleVisibility={onToggleWidgetVisibility}
               onSizeChange={onWidgetSizeChange}
               onReset={onResetLayout}
+              isDragEnabled={isDragEnabled}
+              onToggleDrag={onToggleDrag}
             />
           )}
           

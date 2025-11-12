@@ -4,6 +4,9 @@ import { MetricCard } from "@/components/MetricCard";
 import { FilterBar } from "@/components/FilterBar";
 import { DrillDownModal } from "@/components/DrillDownModal";
 import { LoadingState } from "@/components/LoadingState";
+import { DraggableDashboard } from "@/components/DraggableDashboard";
+import { DraggableWidget } from "@/components/DraggableWidget";
+import { SOCCharts } from "@/components/SOCCharts";
 import { Widget } from "@/components/WidgetCustomizer";
 import { useRealTimeData } from "@/hooks/useRealTimeData";
 import { useDataExport } from "@/hooks/useDataExport";
@@ -161,19 +164,20 @@ const SOC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isDragEnabled, setIsDragEnabled] = useState(false);
 
   // Widget customization
   const [widgets, setWidgets] = useState<Widget[]>([
-    { id: "alerts", label: "Active Alerts", visible: true, size: "medium" },
-    { id: "incidents", label: "Open Incidents", visible: true, size: "medium" },
-    { id: "mttr", label: "Avg MTTR", visible: true, size: "medium" },
-    { id: "efficiency", label: "Analyst Efficiency", visible: true, size: "medium" },
-    { id: "alert-chart", label: "Alert Distribution", visible: true, size: "large" },
-    { id: "incident-chart", label: "Incident Queue", visible: true, size: "large" },
-    { id: "mttr-chart", label: "MTTR Trends", visible: true, size: "large" },
-    { id: "correlation-chart", label: "Event Correlation", visible: true, size: "large" },
-    { id: "analysts", label: "Analyst Workload", visible: true, size: "large" },
-    { id: "queue", label: "Incident Queue", visible: true, size: "large" },
+    { id: "alerts", label: "Active Alerts", visible: true, size: "medium", order: 0 },
+    { id: "incidents", label: "Open Incidents", visible: true, size: "medium", order: 1 },
+    { id: "mttr", label: "Avg MTTR", visible: true, size: "medium", order: 2 },
+    { id: "efficiency", label: "Analyst Efficiency", visible: true, size: "medium", order: 3 },
+    { id: "alert-chart", label: "Alert Distribution", visible: true, size: "large", order: 4 },
+    { id: "incident-chart", label: "Incident Queue", visible: true, size: "large", order: 5 },
+    { id: "mttr-chart", label: "MTTR Trends", visible: true, size: "large", order: 6 },
+    { id: "correlation-chart", label: "Event Correlation", visible: true, size: "large", order: 7 },
+    { id: "analysts", label: "Analyst Workload", visible: true, size: "large", order: 8 },
+    { id: "queue", label: "Incident Queue", visible: true, size: "large", order: 9 },
   ]);
 
   // Real-time data updates
@@ -224,17 +228,26 @@ const SOC = () => {
 
   const resetLayout = () => {
     setWidgets([
-      { id: "alerts", label: "Active Alerts", visible: true, size: "medium" },
-      { id: "incidents", label: "Open Incidents", visible: true, size: "medium" },
-      { id: "mttr", label: "Avg MTTR", visible: true, size: "medium" },
-      { id: "efficiency", label: "Analyst Efficiency", visible: true, size: "medium" },
-      { id: "alert-chart", label: "Alert Distribution", visible: true, size: "large" },
-      { id: "incident-chart", label: "Incident Queue", visible: true, size: "large" },
-      { id: "mttr-chart", label: "MTTR Trends", visible: true, size: "large" },
-      { id: "correlation-chart", label: "Event Correlation", visible: true, size: "large" },
-      { id: "analysts", label: "Analyst Workload", visible: true, size: "large" },
-      { id: "queue", label: "Incident Queue", visible: true, size: "large" },
+      { id: "alerts", label: "Active Alerts", visible: true, size: "medium", order: 0 },
+      { id: "incidents", label: "Open Incidents", visible: true, size: "medium", order: 1 },
+      { id: "mttr", label: "Avg MTTR", visible: true, size: "medium", order: 2 },
+      { id: "efficiency", label: "Analyst Efficiency", visible: true, size: "medium", order: 3 },
+      { id: "alert-chart", label: "Alert Distribution", visible: true, size: "large", order: 4 },
+      { id: "incident-chart", label: "Incident Queue", visible: true, size: "large", order: 5 },
+      { id: "mttr-chart", label: "MTTR Trends", visible: true, size: "large", order: 6 },
+      { id: "correlation-chart", label: "Event Correlation", visible: true, size: "large", order: 7 },
+      { id: "analysts", label: "Analyst Workload", visible: true, size: "large", order: 8 },
+      { id: "queue", label: "Incident Queue", visible: true, size: "large", order: 9 },
     ]);
+  };
+
+  const reorderWidgets = (oldIndex: number, newIndex: number) => {
+    setWidgets((prev) => {
+      const newWidgets = [...prev];
+      const [movedWidget] = newWidgets.splice(oldIndex, 1);
+      newWidgets.splice(newIndex, 0, movedWidget);
+      return newWidgets.map((w, idx) => ({ ...w, order: idx }));
+    });
   };
 
   const handleCardClick = (cardId: string) => {
@@ -312,6 +325,11 @@ const SOC = () => {
 
   const getWidget = (id: string) => widgets.find((w) => w.id === id);
   const isWidgetVisible = (id: string) => getWidget(id)?.visible ?? true;
+  const sortedWidgets = useMemo(() => 
+    [...widgets].sort((a, b) => a.order - b.order),
+    [widgets]
+  );
+  const visibleWidgetIds = sortedWidgets.filter(w => w.visible).map(w => w.id);
 
   if (isLoading) {
     return (
@@ -357,367 +375,115 @@ const SOC = () => {
           onToggleWidgetVisibility={toggleWidgetVisibility}
           onWidgetSizeChange={changeWidgetSize}
           onResetLayout={resetLayout}
+          isDragEnabled={isDragEnabled}
+          onToggleDrag={() => setIsDragEnabled(!isDragEnabled)}
         />
 
-        {isWidgetVisible("alerts") || isWidgetVisible("incidents") || 
-         isWidgetVisible("mttr") || isWidgetVisible("efficiency") ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {isWidgetVisible("alerts") && (
-          <MetricCard
-            title="Active Alerts"
-            value={Math.round(liveData.alertCount * multiplier)}
-            change="+18% from last hour"
-            changeType="negative"
-            icon={Bell}
-            iconColor="text-destructive"
-            onClick={() => handleCardClick("alerts")}
-            isSelected={selectedCard === "alerts"}
-          />
-          )}
-          {isWidgetVisible("incidents") && (
-          <MetricCard
-            title="Open Incidents"
-            value={Math.round(liveData.incidentCount * multiplier)}
-            change="-8% from yesterday"
-            changeType="positive"
-            icon={AlertTriangle}
-            iconColor="text-accent"
-            onClick={() => handleCardClick("incidents")}
-            isSelected={selectedCard === "incidents"}
-          />
-          )}
-          {isWidgetVisible("mttr") && (
-          <MetricCard
-            title="Avg MTTR"
-            value={`${Math.round(24 * multiplier)}m`}
-            change="-12% improvement"
-            changeType="positive"
-            icon={Clock}
-            iconColor="text-primary"
-            onClick={() => handleCardClick("mttr")}
-            isSelected={selectedCard === "mttr"}
-          />
-          )}
-          {isWidgetVisible("efficiency") && (
-          <MetricCard
-            title="Analyst Efficiency"
-            value="91%"
-            change="+5% this week"
-            changeType="positive"
-            icon={Users}
-            iconColor="text-accent"
-            onClick={() => handleCardClick("efficiency")}
-            isSelected={selectedCard === "efficiency"}
-          />
-          )}
-        </div>
-        ) : null}
-
-        {(isWidgetVisible("alert-chart") || isWidgetVisible("incident-chart")) && (
-        <div className="grid gap-4 md:grid-cols-2">
-          {isWidgetVisible("alert-chart") && (
-          <Card className="animate-fade-in hover-scale transition-all">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-primary" />
-                Real-Time Alert Distribution
-              </CardTitle>
-              <CardDescription>Alert volume by severity over 24 hours</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={alertTrends}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="hour" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px"
-                    }} 
-                  />
-                  <Legend />
-                  <Area 
-                    type="monotone" 
-                    dataKey="critical" 
-                    stackId="1"
-                    stroke="hsl(var(--destructive))" 
-                    fill="hsl(var(--destructive))"
-                    fillOpacity={0.6}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="high" 
-                    stackId="1"
-                    stroke="hsl(48, 96%, 53%)" 
-                    fill="hsl(48, 96%, 53%)"
-                    fillOpacity={0.6}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="medium" 
-                    stackId="1"
-                    stroke="hsl(var(--primary))" 
-                    fill="hsl(var(--primary))"
-                    fillOpacity={0.6}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="low" 
-                    stackId="1"
-                    stroke="hsl(var(--accent))" 
-                    fill="hsl(var(--accent))"
-                    fillOpacity={0.6}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-          )}
-
-          {isWidgetVisible("incident-chart") && (
-          <Card className="animate-fade-in hover-scale transition-all">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-accent" />
-                Incident Queue by Status
-              </CardTitle>
-              <CardDescription>Current incident distribution</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={incidentsByStatus}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="status" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px"
-                    }} 
-                  />
-                  <Bar 
-                    dataKey="count" 
-                    onClick={(data) => handleChartClick(data, "Incident Status")}
-                    cursor="pointer"
-                  >
-                    {incidentsByStatus.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-          )}
-        </div>
-        )}
-
-        {(isWidgetVisible("mttr-chart") || isWidgetVisible("correlation-chart")) && (
-        <div className="grid gap-4 md:grid-cols-2">
-          {isWidgetVisible("mttr-chart") && (
-          <Card className="animate-fade-in hover-scale transition-all">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                MTTR Trends & Performance
-              </CardTitle>
-              <CardDescription>Mean Time To Respond tracking</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={mttrTrends}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px"
-                    }} 
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="mttr" 
-                    stroke="hsl(var(--primary))" 
-                    strokeWidth={2}
-                    name="Actual MTTR (min)"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="target" 
-                    stroke="hsl(var(--accent))" 
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    name="Target MTTR (min)"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-          )}
-
-          {isWidgetVisible("correlation-chart") && (
-          <Card className="animate-fade-in hover-scale transition-all">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-accent" />
-                Security Event Correlation
-              </CardTitle>
-              <CardDescription>Real-time event correlation analysis</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <ScatterChart>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    type="number" 
-                    dataKey="events" 
-                    name="Events" 
-                    stroke="hsl(var(--muted-foreground))"
-                  />
-                  <YAxis 
-                    type="number" 
-                    dataKey="severity" 
-                    name="Severity" 
-                    stroke="hsl(var(--muted-foreground))"
-                  />
-                  <Tooltip 
-                    cursor={{ strokeDasharray: "3 3" }}
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px"
-                    }} 
-                  />
-                  <Legend />
-                  <Scatter 
-                    name="Security Events" 
-                    data={eventCorrelation} 
-                    fill="hsl(var(--primary))"
-                    onClick={(data) => handleChartClick(data, "Event Correlation")}
-                  />
-                </ScatterChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-          )}
-        </div>
-        )}
-
-        {isWidgetVisible("analysts") && (
-        <Card className="animate-fade-in hover-scale transition-all">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              Analyst Workload Distribution
-            </CardTitle>
-            <CardDescription>Team performance and case assignments</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {analystWorkload.map((analyst) => (
-                <div
-                  key={analyst.analyst}
-                  className="border border-border rounded-lg p-4 hover:bg-accent/5 transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-lg">{analyst.analyst}</h4>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                        <span>Active Cases: {analyst.active}</span>
-                        <span>•</span>
-                        <span>Resolved: {analyst.resolved}</span>
-                        <span>•</span>
-                        <span>Avg MTTR: {analyst.avgMTTR}m</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">{analyst.efficiency}%</div>
-                      <div className="text-xs text-muted-foreground">Efficiency</div>
-                    </div>
-                  </div>
-                  <div className="mb-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium">Performance Score</span>
-                      <span className="text-sm text-muted-foreground">{analyst.efficiency}%</span>
-                    </div>
-                    <Progress value={analyst.efficiency} className="h-2" />
-                  </div>
+        <DraggableDashboard
+          items={visibleWidgetIds}
+          onReorder={reorderWidgets}
+          isDragEnabled={isDragEnabled}
+        >
+          <div className={isDragEnabled ? "pl-8 space-y-6" : "space-y-6"}>
+            {/* Metric Cards Section */}
+            {sortedWidgets.some(w => 
+              ["alerts", "incidents", "mttr", "efficiency"].includes(w.id) && w.visible
+            ) && (
+              <DraggableWidget id="metrics-section" isDragEnabled={isDragEnabled}>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  {sortedWidgets.map((widget) => {
+                    if (!widget.visible) return null;
+                    
+                    switch (widget.id) {
+                      case "alerts":
+                        return (
+                          <MetricCard
+                            key="alerts"
+                            title="Active Alerts"
+                            value={Math.round(liveData.alertCount * multiplier)}
+                            change="+18% from last hour"
+                            changeType="negative"
+                            icon={Bell}
+                            iconColor="text-destructive"
+                            onClick={() => handleCardClick("alerts")}
+                            isSelected={selectedCard === "alerts"}
+                          />
+                        );
+                      case "incidents":
+                        return (
+                          <MetricCard
+                            key="incidents"
+                            title="Open Incidents"
+                            value={Math.round(liveData.incidentCount * multiplier)}
+                            change="-8% from yesterday"
+                            changeType="positive"
+                            icon={AlertTriangle}
+                            iconColor="text-accent"
+                            onClick={() => handleCardClick("incidents")}
+                            isSelected={selectedCard === "incidents"}
+                          />
+                        );
+                      case "mttr":
+                        return (
+                          <MetricCard
+                            key="mttr"
+                            title="Avg MTTR"
+                            value={`${Math.round(24 * multiplier)}m`}
+                            change="-12% improvement"
+                            changeType="positive"
+                            icon={Clock}
+                            iconColor="text-primary"
+                            onClick={() => handleCardClick("mttr")}
+                            isSelected={selectedCard === "mttr"}
+                          />
+                        );
+                      case "efficiency":
+                        return (
+                          <MetricCard
+                            key="efficiency"
+                            title="Analyst Efficiency"
+                            value="91%"
+                            change="+5% this week"
+                            changeType="positive"
+                            icon={Users}
+                            iconColor="text-accent"
+                            onClick={() => handleCardClick("efficiency")}
+                            isSelected={selectedCard === "efficiency"}
+                          />
+                        );
+                      default:
+                        return null;
+                    }
+                  })}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        )}
+              </DraggableWidget>
+            )}
 
-        {isWidgetVisible("queue") && (
-        <Card className="animate-fade-in hover-scale transition-all">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              Active Incident Queue
-            </CardTitle>
-            <CardDescription>
-              Current incidents requiring attention and response
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {filteredIncidents.map((incident) => (
-                <div
-                  key={incident.id}
-                  className="border border-border rounded-lg p-4 hover:bg-accent/5 transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-semibold text-lg">{incident.title}</h4>
-                        <Badge variant={getSeverityBadgeVariant(incident.severity)}>
-                          {incident.severity.toUpperCase()}
-                        </Badge>
-                        <Badge variant={getStatusBadgeVariant(incident.status)}>
-                          {incident.status.replace("-", " ").toUpperCase()}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                        <span>{incident.id}</span>
-                        <span>•</span>
-                        <span>Assigned to: {incident.assignedTo}</span>
-                        <span>•</span>
-                        <span>Created: {incident.created}</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xl font-bold" style={{ color: getSeverityColor(incident.severity) }}>
-                        {incident.mttr}m
-                      </div>
-                      <div className="text-xs text-muted-foreground">MTTR</div>
-                    </div>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground mb-3">{incident.description}</p>
-
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border">
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">Correlated Events:</span>{" "}
-                      <span className="font-semibold">{incident.events}</span>
-                    </div>
-                    <div className="text-sm text-right">
-                      <span className="text-muted-foreground">Affected Systems:</span>{" "}
-                      <span className="font-semibold">{incident.affectedSystems}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        )}
+            {/* Individual Widget Sections - Render Charts */}
+            {sortedWidgets.map((widget) => {
+              if (!widget.visible) return null;
+              if (["alerts", "incidents", "mttr", "efficiency"].includes(widget.id)) return null;
+              
+              return (
+                <SOCCharts
+                  key={widget.id}
+                  widget={widget}
+                  isDragEnabled={isDragEnabled}
+                  handleChartClick={handleChartClick}
+                  alertTrends={alertTrends}
+                  incidentsByStatus={incidentsByStatus}
+                  mttrTrends={mttrTrends}
+                  eventCorrelation={eventCorrelation}
+                  analystWorkload={analystWorkload}
+                  filteredIncidents={filteredIncidents}
+                  getSeverityColor={getSeverityColor}
+                  getSeverityBadgeVariant={getSeverityBadgeVariant}
+                  getStatusBadgeVariant={getStatusBadgeVariant}
+                />
+              );
+            })}
+          </div>
+        </DraggableDashboard>
 
         <DrillDownModal
           open={isModalOpen}
