@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Home, BarChart3, Shield, FolderKanban, Flame, Laptop, HardDrive } from "lucide-react";
+import { Home, BarChart3, Shield, FolderKanban, Flame, Laptop, HardDrive, Database } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 
 interface DashboardLayoutProps {
@@ -13,6 +13,7 @@ const navigation = [
   { name: "Firewall", href: "/firewall", icon: Flame },
   { name: "Endpoints", href: "/endpoints", icon: Laptop },
   { name: "Assets", href: "/assets", icon: HardDrive },
+  { name: "CMDB", href: "/cmdb", icon: Database },
   { name: "Compliance", href: "/projects", icon: FolderKanban },
 ];
 

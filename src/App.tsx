@@ -10,6 +10,7 @@ import Projects from "./pages/Projects";
 import Firewall from "./pages/Firewall";
 import Endpoints from "./pages/Endpoints";
 import Assets from "./pages/Assets";
+import CMDB from "./pages/CMDB";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/firewall" element={<Firewall />} />
           <Route path="/endpoints" element={<Endpoints />} />
           <Route path="/assets" element={<Assets />} />
+          <Route path="/cmdb" element={<CMDB />} />
           <Route path="/projects" element={<Projects />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
