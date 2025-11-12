@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard } from "@/components/MetricCard";
 import { FilterBar } from "@/components/FilterBar";
+import { DrillDownModal } from "@/components/DrillDownModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRange } from "react-day-picker";
 import { CheckCircle2, Clock, AlertCircle, FolderKanban } from "lucide-react";
@@ -46,6 +47,8 @@ const Projects = () => {
   });
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [drillDownData, setDrillDownData] = useState<any>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const handleReset = () => {
     setDateRange({
@@ -58,6 +61,32 @@ const Projects = () => {
 
   const handleCardClick = (cardType: string) => {
     setSelectedCard(selectedCard === cardType ? null : cardType);
+  };
+
+  const handleChartClick = (data: any) => {
+    if (!data) return;
+    
+    const drillDown = {
+      title: `${data.status} Projects`,
+      value: data.count.toString(),
+      trend: 5.8,
+      period: "vs. previous period",
+      details: [
+        { label: "Total Projects", value: data.count.toString(), change: "+6%" },
+        { label: "Team Members", value: Math.round(data.count * 2.5).toString(), change: "+3%" },
+        { label: "On Budget", value: Math.round(data.count * 0.85).toString(), change: "+2%" },
+        { label: "Avg. Progress", value: `${Math.round(70 + Math.random() * 20)}%`, change: "+4%" },
+      ],
+      timeSeriesData: [
+        { date: "Week 1", value: Math.round(data.count * 0.2) },
+        { date: "Week 2", value: Math.round(data.count * 0.25) },
+        { date: "Week 3", value: Math.round(data.count * 0.28) },
+        { date: "Week 4", value: Math.round(data.count * 0.27) },
+      ],
+    };
+    
+    setDrillDownData(drillDown);
+    setModalOpen(true);
   };
 
   const filteredProjects = useMemo(() => {
@@ -166,7 +195,7 @@ const Projects = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={getFilteredStatusData()}>
+                <BarChart data={getFilteredStatusData()} onClick={(e) => e?.activePayload && handleChartClick(e.activePayload[0].payload)}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="status" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />
@@ -176,8 +205,9 @@ const Projects = () => {
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "var(--radius)",
                     }}
+                    cursor={{ fill: "hsl(var(--muted) / 0.1)" }}
                   />
-                  <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[8, 8, 0, 0]} cursor="pointer" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -216,6 +246,11 @@ const Projects = () => {
           </Card>
         </div>
       </div>
+      <DrillDownModal 
+        open={modalOpen} 
+        onOpenChange={setModalOpen} 
+        data={drillDownData} 
+      />
     </DashboardLayout>
   );
 };

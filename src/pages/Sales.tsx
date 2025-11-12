@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard } from "@/components/MetricCard";
 import { FilterBar } from "@/components/FilterBar";
+import { DrillDownModal } from "@/components/DrillDownModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRange } from "react-day-picker";
 import { DollarSign, ShoppingCart, TrendingUp, Package } from "lucide-react";
@@ -51,6 +52,8 @@ const Sales = () => {
   });
   const [selectedMetric, setSelectedMetric] = useState("all");
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [drillDownData, setDrillDownData] = useState<any>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const handleReset = () => {
     setDateRange({
@@ -63,6 +66,53 @@ const Sales = () => {
 
   const handleCardClick = (cardType: string) => {
     setSelectedCard(selectedCard === cardType ? null : cardType);
+  };
+
+  const handleChartClick = (data: any, chartType: string) => {
+    if (!data) return;
+    
+    let drillDown;
+    if (chartType === "revenue") {
+      drillDown = {
+        title: `Revenue - ${data.month}`,
+        value: `$${data.value.toLocaleString()}`,
+        trend: 12.5,
+        period: "vs. previous month",
+        details: [
+          { label: "Online Sales", value: `$${Math.round(data.value * 0.6).toLocaleString()}`, change: "+15%" },
+          { label: "In-Store Sales", value: `$${Math.round(data.value * 0.3).toLocaleString()}`, change: "+8%" },
+          { label: "Wholesale", value: `$${Math.round(data.value * 0.1).toLocaleString()}`, change: "+22%" },
+        ],
+        timeSeriesData: [
+          { date: "Week 1", value: Math.round(data.value * 0.2) },
+          { date: "Week 2", value: Math.round(data.value * 0.25) },
+          { date: "Week 3", value: Math.round(data.value * 0.28) },
+          { date: "Week 4", value: Math.round(data.value * 0.27) },
+        ],
+      };
+    } else {
+      drillDown = {
+        title: data.product,
+        value: `${data.sales} units sold`,
+        trend: 8.3,
+        period: "vs. previous period",
+        details: [
+          { label: "Revenue", value: `$${(data.sales * 45).toLocaleString()}`, change: "+12%" },
+          { label: "Units Sold", value: data.sales.toString(), change: "+8%" },
+          { label: "Average Price", value: "$45", change: "+4%" },
+          { label: "Customer Satisfaction", value: "4.5/5", change: "+0.2" },
+        ],
+        timeSeriesData: [
+          { date: "Week 1", value: Math.round(data.sales * 0.22) },
+          { date: "Week 2", value: Math.round(data.sales * 0.24) },
+          { date: "Week 3", value: Math.round(data.sales * 0.27) },
+          { date: "Week 4", value: Math.round(data.sales * 0.27) },
+        ],
+      };
+    }
+    
+    setDrillDownData(drillDown);
+    setModalOpen(true);
   };
 
   const getMetricMultiplier = () => {
@@ -266,6 +316,11 @@ const Sales = () => {
           </Card>
         </div>
       </div>
+      <DrillDownModal 
+        open={modalOpen} 
+        onOpenChange={setModalOpen} 
+        data={drillDownData} 
+      />
     </DashboardLayout>
   );
 };

@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard } from "@/components/MetricCard";
 import { FilterBar } from "@/components/FilterBar";
+import { DrillDownModal } from "@/components/DrillDownModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRange } from "react-day-picker";
 import { Eye, MousePointer, Clock, Users } from "lucide-react";
@@ -60,6 +61,8 @@ const Analytics = () => {
   });
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [drillDownData, setDrillDownData] = useState<any>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const handleReset = () => {
     setDateRange({
@@ -72,6 +75,47 @@ const Analytics = () => {
 
   const handleCardClick = (cardType: string) => {
     setSelectedCard(selectedCard === cardType ? null : cardType);
+  };
+
+  const handleChartClick = (data: any, chartType: string) => {
+    if (!data) return;
+    
+    let drillDown;
+    if (chartType === "pageviews") {
+      drillDown = {
+        title: `Page Views - ${data.day}`,
+        value: data.views.toLocaleString(),
+        trend: 15.2,
+        period: "vs. previous day",
+        details: [
+          { label: "Desktop Views", value: Math.round(data.views * 0.65).toLocaleString(), change: "+18%" },
+          { label: "Mobile Views", value: Math.round(data.views * 0.30).toLocaleString(), change: "+12%" },
+          { label: "Tablet Views", value: Math.round(data.views * 0.05).toLocaleString(), change: "+5%" },
+        ],
+        timeSeriesData: [
+          { date: "00:00-06:00", value: Math.round(data.views * 0.1) },
+          { date: "06:00-12:00", value: Math.round(data.views * 0.25) },
+          { date: "12:00-18:00", value: Math.round(data.views * 0.4) },
+          { date: "18:00-24:00", value: Math.round(data.views * 0.25) },
+        ],
+      };
+    } else {
+      drillDown = {
+        title: `${data.source} Traffic`,
+        value: `${data.value.toLocaleString()} visitors`,
+        trend: 9.7,
+        period: "vs. previous period",
+        details: [
+          { label: "New Visitors", value: Math.round(data.value * 0.6).toLocaleString(), change: "+14%" },
+          { label: "Returning Visitors", value: Math.round(data.value * 0.4).toLocaleString(), change: "+5%" },
+          { label: "Bounce Rate", value: "42%", change: "-3%" },
+          { label: "Avg. Session Duration", value: "3m 24s", change: "+12%" },
+        ],
+      };
+    }
+    
+    setDrillDownData(drillDown);
+    setModalOpen(true);
   };
 
   const filteredTrafficData = useMemo(() => {
@@ -291,6 +335,11 @@ const Analytics = () => {
           </Card>
         </div>
       </div>
+      <DrillDownModal 
+        open={modalOpen} 
+        onOpenChange={setModalOpen} 
+        data={drillDownData} 
+      />
     </DashboardLayout>
   );
 };
