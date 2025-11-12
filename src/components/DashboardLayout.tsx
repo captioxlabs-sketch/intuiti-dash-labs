@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Home, BarChart3, Shield, FolderKanban, Flame, Laptop, HardDrive, Database, Timer, Activity, Radio, Bug, Network } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { ScanlineOverlay } from "@/components/ScanlineOverlay";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -24,7 +25,8 @@ const navigation = [
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background relative">
+      <ScanlineOverlay />
       <aside className="w-64 border-r border-border bg-sidebar">
         <div className="flex h-16 items-center px-6 border-b border-sidebar-border">
           <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
