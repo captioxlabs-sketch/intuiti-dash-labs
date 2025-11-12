@@ -45,6 +45,7 @@ const Projects = () => {
     to: new Date(),
   });
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
   const handleReset = () => {
     setDateRange({
@@ -52,6 +53,11 @@ const Projects = () => {
       to: new Date(),
     });
     setSelectedStatus("all");
+    setSelectedCard(null);
+  };
+
+  const handleCardClick = (cardType: string) => {
+    setSelectedCard(selectedCard === cardType ? null : cardType);
   };
 
   const filteredProjects = useMemo(() => {
@@ -68,6 +74,22 @@ const Projects = () => {
   };
 
   const multiplier = getMetricMultiplier();
+
+  // Filter data based on selected card
+  const getFilteredStatusData = () => {
+    if (!selectedCard) return projectStatusData;
+    
+    switch (selectedCard) {
+      case "completed":
+        return projectStatusData.filter(d => d.status === "Completed");
+      case "in-progress":
+        return projectStatusData.filter(d => d.status === "In Progress");
+      case "on-hold":
+        return projectStatusData.filter(d => d.status === "On Hold");
+      default:
+        return projectStatusData;
+    }
+  };
   return (
     <DashboardLayout>
       <div className="p-8">
@@ -97,6 +119,8 @@ const Projects = () => {
             changeType="positive"
             icon={FolderKanban}
             iconColor="text-chart-1"
+            onClick={() => handleCardClick("active")}
+            isSelected={selectedCard === "active"}
           />
           <MetricCard
             title="Completed"
@@ -105,6 +129,8 @@ const Projects = () => {
             changeType="positive"
             icon={CheckCircle2}
             iconColor="text-chart-2"
+            onClick={() => handleCardClick("completed")}
+            isSelected={selectedCard === "completed"}
           />
           <MetricCard
             title="In Progress"
@@ -113,6 +139,8 @@ const Projects = () => {
             changeType="neutral"
             icon={Clock}
             iconColor="text-chart-3"
+            onClick={() => handleCardClick("in-progress")}
+            isSelected={selectedCard === "in-progress"}
           />
           <MetricCard
             title="Overdue"
@@ -121,17 +149,24 @@ const Projects = () => {
             changeType="negative"
             icon={AlertCircle}
             iconColor="text-chart-5"
+            onClick={() => handleCardClick("on-hold")}
+            isSelected={selectedCard === "on-hold"}
           />
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 mb-6">
           <Card className="animate-fade-in">
             <CardHeader>
-              <CardTitle>Project Status Distribution</CardTitle>
+              <CardTitle>
+                Project Status Distribution
+                {selectedCard && <span className="text-sm font-normal text-muted-foreground ml-2">
+                  (Filtered by {selectedCard})
+                </span>}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={projectStatusData}>
+                <BarChart data={getFilteredStatusData()}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="status" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />

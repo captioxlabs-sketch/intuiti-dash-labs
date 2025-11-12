@@ -9,6 +9,8 @@ interface MetricCardProps {
   changeType?: "positive" | "negative" | "neutral";
   icon: LucideIcon;
   iconColor?: string;
+  onClick?: () => void;
+  isSelected?: boolean;
 }
 
 export const MetricCard = ({
@@ -18,9 +20,18 @@ export const MetricCard = ({
   changeType = "neutral",
   icon: Icon,
   iconColor = "text-primary",
+  onClick,
+  isSelected = false,
 }: MetricCardProps) => {
   return (
-    <Card className="transition-all duration-300 hover:shadow-lg hover:scale-[1.02] animate-fade-in">
+    <Card 
+      className={cn(
+        "transition-all duration-300 hover:shadow-lg animate-fade-in",
+        onClick && "cursor-pointer hover:scale-[1.02]",
+        isSelected && "ring-2 ring-primary shadow-lg scale-[1.02] bg-primary/5"
+      )}
+      onClick={onClick}
+    >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}

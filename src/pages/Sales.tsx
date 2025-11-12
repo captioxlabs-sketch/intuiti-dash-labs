@@ -50,6 +50,7 @@ const Sales = () => {
     to: new Date(),
   });
   const [selectedMetric, setSelectedMetric] = useState("all");
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
   const handleReset = () => {
     setDateRange({
@@ -57,6 +58,11 @@ const Sales = () => {
       to: new Date(),
     });
     setSelectedMetric("all");
+    setSelectedCard(null);
+  };
+
+  const handleCardClick = (cardType: string) => {
+    setSelectedCard(selectedCard === cardType ? null : cardType);
   };
 
   const getMetricMultiplier = () => {
@@ -66,6 +72,25 @@ const Sales = () => {
   };
 
   const multiplier = getMetricMultiplier();
+
+  // Filter data based on selected card
+  const getFilteredRevenueData = () => {
+    if (!selectedCard) return revenueData;
+    
+    switch (selectedCard) {
+      case "revenue":
+        return revenueData.map(d => ({ ...d, orders: 0 }));
+      case "orders":
+        return revenueData.map(d => ({ ...d, revenue: 0 }));
+      default:
+        return revenueData;
+    }
+  };
+
+  const getFilteredProductData = () => {
+    if (!selectedCard || selectedCard === "products") return productData;
+    return [];
+  };
   return (
     <DashboardLayout>
       <div className="p-8">
@@ -94,6 +119,8 @@ const Sales = () => {
               changeType="positive"
               icon={DollarSign}
               iconColor="text-chart-2"
+              onClick={() => handleCardClick("revenue")}
+              isSelected={selectedCard === "revenue"}
             />
           )}
           {(selectedMetric === "all" || selectedMetric === "orders") && (
@@ -104,6 +131,8 @@ const Sales = () => {
               changeType="positive"
               icon={ShoppingCart}
               iconColor="text-chart-1"
+              onClick={() => handleCardClick("orders")}
+              isSelected={selectedCard === "orders"}
             />
           )}
           <MetricCard
@@ -113,6 +142,8 @@ const Sales = () => {
             changeType="positive"
             icon={TrendingUp}
             iconColor="text-chart-3"
+            onClick={() => handleCardClick("conversion")}
+            isSelected={selectedCard === "conversion"}
           />
           {(selectedMetric === "all" || selectedMetric === "products") && (
             <MetricCard
@@ -122,6 +153,8 @@ const Sales = () => {
               changeType="positive"
               icon={Package}
               iconColor="text-chart-4"
+              onClick={() => handleCardClick("products")}
+              isSelected={selectedCard === "products"}
             />
           )}
         </div>
@@ -129,11 +162,16 @@ const Sales = () => {
         <div className="grid gap-6 mb-6">
           <Card className="animate-fade-in">
             <CardHeader>
-              <CardTitle>Revenue Trend</CardTitle>
+              <CardTitle>
+                Revenue Trend
+                {selectedCard && <span className="text-sm font-normal text-muted-foreground ml-2">
+                  (Filtered by {selectedCard})
+                </span>}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={350}>
-                <AreaChart data={revenueData}>
+                <AreaChart data={getFilteredRevenueData()}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
@@ -167,11 +205,16 @@ const Sales = () => {
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="animate-fade-in">
             <CardHeader>
-              <CardTitle>Sales by Category</CardTitle>
+              <CardTitle>
+                Sales by Category
+                {selectedCard === "products" && <span className="text-sm font-normal text-muted-foreground ml-2">
+                  (Filtered by products)
+                </span>}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={productData} layout="vertical">
+                <BarChart data={getFilteredProductData()} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
                   <YAxis dataKey="category" type="category" stroke="hsl(var(--muted-foreground))" width={120} />
@@ -190,11 +233,16 @@ const Sales = () => {
 
           <Card className="animate-fade-in">
             <CardHeader>
-              <CardTitle>Order Volume</CardTitle>
+              <CardTitle>
+                Order Volume
+                {selectedCard === "orders" && <span className="text-sm font-normal text-muted-foreground ml-2">
+                  (Filtered by orders)
+                </span>}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={revenueData}>
+                <LineChart data={getFilteredRevenueData()}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />

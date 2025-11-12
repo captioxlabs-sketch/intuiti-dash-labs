@@ -59,6 +59,7 @@ const Analytics = () => {
     to: new Date(),
   });
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
   const handleReset = () => {
     setDateRange({
@@ -66,6 +67,11 @@ const Analytics = () => {
       to: new Date(),
     });
     setSelectedCategory("all");
+    setSelectedCard(null);
+  };
+
+  const handleCardClick = (cardType: string) => {
+    setSelectedCard(selectedCard === cardType ? null : cardType);
   };
 
   const filteredTrafficData = useMemo(() => {
@@ -82,6 +88,20 @@ const Analytics = () => {
   };
 
   const multiplier = getMetricMultiplier();
+
+  // Filter data based on selected card
+  const getFilteredPageViewsData = () => {
+    if (!selectedCard) return pageViewsData;
+    
+    switch (selectedCard) {
+      case "views":
+        return pageViewsData.map(d => ({ ...d, users: 0 }));
+      case "users":
+        return pageViewsData.map(d => ({ ...d, views: 0 }));
+      default:
+        return pageViewsData;
+    }
+  };
   return (
     <DashboardLayout>
       <div className="p-8">
@@ -100,6 +120,8 @@ const Analytics = () => {
             changeType="positive"
             icon={Eye}
             iconColor="text-chart-1"
+            onClick={() => handleCardClick("views")}
+            isSelected={selectedCard === "views"}
           />
           <MetricCard
             title="Avg. Session"
@@ -108,6 +130,8 @@ const Analytics = () => {
             changeType="positive"
             icon={Clock}
             iconColor="text-chart-2"
+            onClick={() => handleCardClick("session")}
+            isSelected={selectedCard === "session"}
           />
           <MetricCard
             title="Click Rate"
@@ -116,6 +140,8 @@ const Analytics = () => {
             changeType="positive"
             icon={MousePointer}
             iconColor="text-chart-3"
+            onClick={() => handleCardClick("clicks")}
+            isSelected={selectedCard === "clicks"}
           />
           <MetricCard
             title="Active Users"
@@ -124,17 +150,24 @@ const Analytics = () => {
             changeType="positive"
             icon={Users}
             iconColor="text-chart-4"
+            onClick={() => handleCardClick("users")}
+            isSelected={selectedCard === "users"}
           />
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 mb-6">
           <Card className="animate-fade-in">
             <CardHeader>
-              <CardTitle>Traffic Overview</CardTitle>
+              <CardTitle>
+                Traffic Overview
+                {selectedCard === "views" && <span className="text-sm font-normal text-muted-foreground ml-2">
+                  (Filtered by page views)
+                </span>}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={pageViewsData}>
+                <AreaChart data={getFilteredPageViewsData()}>
                   <defs>
                     <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
@@ -166,11 +199,16 @@ const Analytics = () => {
 
           <Card className="animate-fade-in">
             <CardHeader>
-              <CardTitle>User Growth</CardTitle>
+              <CardTitle>
+                User Growth
+                {selectedCard === "users" && <span className="text-sm font-normal text-muted-foreground ml-2">
+                  (Filtered by users)
+                </span>}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={pageViewsData}>
+                <LineChart data={getFilteredPageViewsData()}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />

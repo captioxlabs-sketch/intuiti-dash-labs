@@ -19,6 +19,7 @@ const Overview = () => {
     to: new Date(),
   });
   const [selectedMetric, setSelectedMetric] = useState("all");
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
   const handleReset = () => {
     setDateRange({
@@ -26,6 +27,11 @@ const Overview = () => {
       to: new Date(),
     });
     setSelectedMetric("all");
+    setSelectedCard(null);
+  };
+
+  const handleCardClick = (cardType: string) => {
+    setSelectedCard(selectedCard === cardType ? null : cardType);
   };
 
   const getMetricMultiplier = () => {
@@ -65,6 +71,8 @@ const Overview = () => {
               changeType="positive"
               icon={Users}
               iconColor="text-chart-1"
+              onClick={() => handleCardClick("users")}
+              isSelected={selectedCard === "users"}
             />
           )}
           {(selectedMetric === "all" || selectedMetric === "revenue") && (
@@ -75,6 +83,8 @@ const Overview = () => {
               changeType="positive"
               icon={DollarSign}
               iconColor="text-chart-2"
+              onClick={() => handleCardClick("revenue")}
+              isSelected={selectedCard === "revenue"}
             />
           )}
           {(selectedMetric === "all" || selectedMetric === "growth") && (
@@ -85,6 +95,8 @@ const Overview = () => {
               changeType="positive"
               icon={TrendingUp}
               iconColor="text-chart-3"
+              onClick={() => handleCardClick("growth")}
+              isSelected={selectedCard === "growth"}
             />
           )}
           <MetricCard
@@ -94,6 +106,8 @@ const Overview = () => {
             changeType="neutral"
             icon={Activity}
             iconColor="text-chart-4"
+            onClick={() => handleCardClick("sessions")}
+            isSelected={selectedCard === "sessions"}
           />
         </div>
 
