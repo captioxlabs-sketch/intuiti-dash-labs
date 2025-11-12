@@ -23,12 +23,17 @@ export const MetricCard = ({
   onClick,
   isSelected = false,
 }: MetricCardProps) => {
+  const glowClass = changeType === "positive" ? "hover:glow-neon-green" :
+                   changeType === "negative" ? "hover:glow-neon-pink" :
+                   "hover:glow-primary";
+
   return (
     <Card 
       className={cn(
-        "transition-all duration-300 hover:shadow-lg animate-fade-in",
-        onClick && "cursor-pointer hover:scale-[1.02]",
-        isSelected && "ring-2 ring-primary shadow-lg scale-[1.02] bg-primary/5"
+        "transition-all duration-300 hover:shadow-lg animate-fade-in hover:scale-105",
+        glowClass,
+        onClick && "cursor-pointer active:scale-95",
+        isSelected && "ring-2 ring-primary shadow-lg scale-105 bg-primary/5 glow-primary"
       )}
       onClick={onClick}
     >
@@ -43,9 +48,9 @@ export const MetricCard = ({
         {change && (
           <p
             className={cn(
-              "text-sm mt-1",
-              changeType === "positive" && "text-accent",
-              changeType === "negative" && "text-destructive",
+              "text-sm mt-1 font-medium",
+              changeType === "positive" && "text-neon-green",
+              changeType === "negative" && "text-neon-pink",
               changeType === "neutral" && "text-muted-foreground"
             )}
           >

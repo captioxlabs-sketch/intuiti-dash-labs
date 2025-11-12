@@ -58,15 +58,15 @@ export const HeatmapChart = ({
     
     const intensity = getIntensity(dataPoint.value);
     
-    // Determine severity based on intensity
+    // Determine severity based on intensity with neon colors
     if (intensity >= 0.75) {
-      return colorScale.critical;
+      return "hsl(var(--neon-pink))";
     } else if (intensity >= 0.5) {
-      return colorScale.high;
+      return "hsl(var(--neon-purple))";
     } else if (intensity >= 0.25) {
-      return colorScale.medium;
+      return "hsl(var(--neon-cyan))";
     } else {
-      return colorScale.low;
+      return "hsl(var(--neon-blue))";
     }
   };
 
@@ -97,13 +97,18 @@ export const HeatmapChart = ({
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">Low</span>
               <div className="flex gap-1">
-                {[0.3, 0.5, 0.7, 1.0].map((opacity, i) => (
+                {[
+                  { opacity: 0.3, color: "hsl(var(--neon-blue))" },
+                  { opacity: 0.5, color: "hsl(var(--neon-cyan))" },
+                  { opacity: 0.7, color: "hsl(var(--neon-purple))" },
+                  { opacity: 1.0, color: "hsl(var(--neon-pink))" },
+                ].map((item, i) => (
                   <div
                     key={i}
-                    className="w-4 h-4 rounded"
+                    className="w-4 h-4 rounded glow-neon-cyan"
                     style={{
-                      backgroundColor: colorScale.medium,
-                      opacity,
+                      backgroundColor: item.color,
+                      opacity: item.opacity,
                     }}
                   />
                 ))}
@@ -139,13 +144,19 @@ export const HeatmapChart = ({
                       </div>
                       {hours.map((hour) => {
                         const dataPoint = getDataPoint(day, hour);
+                        const intensity = dataPoint ? getIntensity(dataPoint.value) : 0;
+                        const glowClass = intensity >= 0.75 ? 'hover:glow-neon-pink' : 
+                                        intensity >= 0.5 ? 'hover:glow-neon-purple' : 
+                                        intensity >= 0.25 ? 'hover:glow-neon-cyan' : 
+                                        'hover:glow-neon-blue';
+                        
                         return (
                           <Tooltip key={`${day}-${hour}`}>
                             <TooltipTrigger asChild>
                               <div
                                 className={cn(
-                                  "aspect-square rounded transition-all cursor-pointer hover:ring-2 hover:ring-primary hover:scale-110",
-                                  dataPoint && "hover:shadow-lg"
+                                  "aspect-square rounded transition-all duration-300 cursor-pointer hover:ring-2 hover:ring-primary hover:scale-125",
+                                  dataPoint && glowClass
                                 )}
                                 style={{
                                   backgroundColor: getCellColor(dataPoint),
@@ -154,9 +165,9 @@ export const HeatmapChart = ({
                                 onClick={() => dataPoint && onCellClick?.(dataPoint)}
                               />
                             </TooltipTrigger>
-                            <TooltipContent>
+                            <TooltipContent className="bg-card/95 backdrop-blur border-primary/50">
                               <div className="text-sm">
-                                <div className="font-semibold">
+                                <div className="font-semibold text-neon-cyan">
                                   {day} at {formatHour(hour)}
                                 </div>
                                 <div className="text-muted-foreground">
