@@ -12,6 +12,7 @@ import Endpoints from "./pages/Endpoints";
 import Assets from "./pages/Assets";
 import CMDB from "./pages/CMDB";
 import Lifecycle from "./pages/Lifecycle";
+import AssetHealth from "./pages/AssetHealth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/assets" element={<Assets />} />
           <Route path="/cmdb" element={<CMDB />} />
           <Route path="/lifecycle" element={<Lifecycle />} />
+          <Route path="/asset-health" element={<AssetHealth />} />
           <Route path="/projects" element={<Projects />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

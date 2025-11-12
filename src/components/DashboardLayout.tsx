@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Home, BarChart3, Shield, FolderKanban, Flame, Laptop, HardDrive, Database, Timer } from "lucide-react";
+import { Home, BarChart3, Shield, FolderKanban, Flame, Laptop, HardDrive, Database, Timer, Activity } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 
 interface DashboardLayoutProps {
@@ -15,6 +15,7 @@ const navigation = [
   { name: "Assets", href: "/assets", icon: HardDrive },
   { name: "CMDB", href: "/cmdb", icon: Database },
   { name: "Lifecycle", href: "/lifecycle", icon: Timer },
+  { name: "Asset Health", href: "/asset-health", icon: Activity },
   { name: "Compliance", href: "/projects", icon: FolderKanban },
 ];
 
