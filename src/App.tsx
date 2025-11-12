@@ -5,8 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Overview from "./pages/Overview";
 import Analytics from "./pages/Analytics";
-import Sales from "./pages/Sales";
+import Threats from "./pages/Sales";
 import Projects from "./pages/Projects";
+import Firewall from "./pages/Firewall";
+import Endpoints from "./pages/Endpoints";
+import Assets from "./pages/Assets";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,7 +23,10 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Overview />} />
           <Route path="/analytics" element={<Analytics />} />
-          <Route path="/sales" element={<Sales />} />
+          <Route path="/threats" element={<Threats />} />
+          <Route path="/firewall" element={<Firewall />} />
+          <Route path="/endpoints" element={<Endpoints />} />
+          <Route path="/assets" element={<Assets />} />
           <Route path="/projects" element={<Projects />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
