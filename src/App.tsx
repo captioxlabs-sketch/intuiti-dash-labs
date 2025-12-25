@@ -20,6 +20,7 @@ import IEC62443 from "./pages/IEC62443";
 import NISTCSF from "./pages/NISTCSF";
 import CISControls from "./pages/CISControls";
 import ComplianceOverview from "./pages/ComplianceOverview";
+import ComplianceTimeline from "./pages/ComplianceTimeline";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
           <Route path="/nist-csf" element={<NISTCSF />} />
           <Route path="/cis-controls" element={<CISControls />} />
           <Route path="/compliance" element={<ComplianceOverview />} />
+          <Route path="/compliance-timeline" element={<ComplianceTimeline />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
