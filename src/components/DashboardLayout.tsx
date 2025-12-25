@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Home, BarChart3, Shield, FolderKanban, Flame, Laptop, HardDrive, Database, Timer, Activity, Radio, Bug, Network, ShieldCheck } from "lucide-react";
+import { Home, BarChart3, Shield, FolderKanban, Flame, Laptop, HardDrive, Database, Timer, Activity, Radio, Bug, Network, ShieldCheck, ShieldHalf } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 
 interface DashboardLayoutProps {
@@ -21,6 +21,7 @@ const navigation = [
   { name: "Asset Health", href: "/asset-health", icon: Activity },
   { name: "Compliance", href: "/projects", icon: FolderKanban },
   { name: "IEC 62443", href: "/iec62443", icon: ShieldCheck },
+  { name: "NIST CSF", href: "/nist-csf", icon: ShieldHalf },
 ];
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {

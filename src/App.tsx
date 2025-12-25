@@ -17,6 +17,7 @@ import SOC from "./pages/SOC";
 import VulnerabilityManagement from "./pages/VulnerabilityManagement";
 import NetworkMonitoring from "./pages/NetworkMonitoring";
 import IEC62443 from "./pages/IEC62443";
+import NISTCSF from "./pages/NISTCSF";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
           <Route path="/network" element={<NetworkMonitoring />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/iec62443" element={<IEC62443 />} />
+          <Route path="/nist-csf" element={<NISTCSF />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
